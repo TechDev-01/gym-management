@@ -1,13 +1,13 @@
 import express from 'express'
+import { v1Router } from './routes/v1/index.js'
+import { errorHandlerMiddleware } from './shared/middlewares/error-handler.middleware.js'
+import { notFoundMiddleware } from './shared/middlewares/not-found.middleware.js'
 
-const xp = express();
-const port = 3000;
+export const app = express()
 
-xp.get('/', (req, res) => {
-    res.send("Hello, World\n");
-    console.log(`Request from: ${req.url}`)
-})
+app.use(express.json())
+app.use('/api/v1', v1Router)
+app.use(notFoundMiddleware)
+app.use(errorHandlerMiddleware)
 
-xp.listen(port, () => {
-    console.log(`Server listening on port: ${port}`)
-})
+export default app
