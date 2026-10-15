@@ -1,0 +1,264 @@
+// ============================================================
+// Sistema de gestión de gimnasio — modelo de datos (PostgreSQL)
+// Pegar en https://dbdiagram.io para visualizar el diagrama
+// Convención: inglés, snake_case, montos en la unidad mínima de la moneda
+// ============================================================
+
+// ---------- ENUMS ----------
+
+Enum user_role {
+  ADMIN
+  RECEPTION
+  COACH
+  CLIENT
+}
+
+Enum subscription_status {
+  PENDING      // creada, esperando confirmación del pago
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+Enum payment_method {
+  CARD         // cobrado vía Stripe
+  CASH
+  TRANSFER
+}
+
+Enum payment_status {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED     // reembolso total; los parciales se reflejan en refunded_amount
+}
+
+Enum muscle_group {
+  CHEST
+  BACK
+  SHOULDERS
+  ARMS
+  LEGS
+  GLUTES
+  CORE
+  CARDIO
+  FULL_BODY
+}
+
+Enum routine_level {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+Enum assignment_status {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+// ---------- PERSONAS Y ACCESO ----------
+
+Table client {
+  id                  serial       [pk]
+  name                varchar(100) [not null]
+  last_name           varchar(100) [not null]
+  dni                 varchar(20)  [not null, unique]
+  phone               varchar(20)  [not null, unique]
+  email               varchar(100) [unique]
+  stripe_customer_id  varchar(255) [unique, note: 'cus_... — se crea la primera vez que paga con tarjeta']
+  is_active           boolean      [not null, default: true]
+  created_at          timestamptz  [not null, default: `now()`]
+}
+
+Table coach {
+  id          serial       [pk]
+  name        varchar(100) [not null]
+  last_name   varchar(100) [not null]
+  dni         varchar(20)  [not null, unique]
+  phone       varchar(20)  [not null, unique]
+  email       varchar(100) [unique]
+  is_active   boolean      [not null, default: true]
+}
+
+Table coach_schedule {
+  id           serial   [pk]
+  coach_id     integer  [not null, ref: > coach.id]
+  day_of_week  smallint [not null, note: '1 = lunes ... 7 = domingo']
+  start_time   time     [not null]
+  end_time     time     [not null]
+
+  indexes {
+    (coach_id, day_of_week, start_time) [unique]
+  }
+}
+
+Table app_user {
+  id             serial       [pk]
+  email          varchar(100) [not null, unique]
+  password_hash  text         [not null]
+  role           user_role    [not null]
+  client_id      integer      [unique, ref: - client.id]
+  coach_id       integer      [unique, ref: - coach.id]
+  is_active      boolean      [not null, default: true]
+  last_login_at  timestamptz
+  created_at     timestamptz  [not null, default: `now()`]
+
+  Note: '''
+    Cuenta de acceso al sistema. Un usuario CLIENT tiene client_id, uno COACH tiene coach_id;
+    ADMIN y RECEPTION no tienen ninguno. Agregar un CHECK para que no tenga ambos a la vez.
+  '''
+}
+
+// ---------- MEMBRESÍAS Y PAGOS ----------
+
+Table membership {
+  id                 serial       [pk]
+  name               varchar(50)  [not null, unique]
+  duration_days      integer      [not null]
+  max_days_per_week  smallint     [note: 'null = sin límite']
+  price_amount       integer      [not null, note: 'unidad mínima de la moneda, igual que Stripe']
+  currency           char(3)      [not null, default: 'usd', note: 'ajustar a la moneda de tu cuenta Stripe']
+  stripe_product_id  varchar(255) [unique, note: 'prod_...']
+  stripe_price_id    varchar(255) [unique, note: 'price_... — los Price de Stripe son inmutables: si cambia el precio, crear uno nuevo']
+  is_active          boolean      [not null, default: true]
+}
+
+Table subscription {
+  id                      serial              [pk]
+  client_id               integer             [not null, ref: > client.id]
+  membership_id           integer             [not null, ref: > membership.id]
+  status                  subscription_status [not null, default: 'PENDING']
+  start_date              date                [note: 'se asigna al activarse']
+  end_date                date                [note: 'start_date + duration_days, se asigna al activarse']
+  stripe_subscription_id  varchar(255)        [unique, note: 'sub_... — solo si usas cobro recurrente; null con pagos únicos']
+  created_at              timestamptz         [not null, default: `now()`]
+
+  indexes {
+    (client_id, status)
+  }
+}
+
+Table payment {
+  id                          serial         [pk]
+  client_id                   integer        [not null, ref: > client.id]
+  subscription_id             integer        [not null, ref: > subscription.id]
+  method                      payment_method [not null]
+  status                      payment_status [not null, default: 'PENDING']
+  amount                      integer        [not null, note: 'unidad mínima de la moneda']
+  currency                    char(3)        [not null]
+  refunded_amount             integer        [not null, default: 0]
+  stripe_checkout_session_id  varchar(255)   [unique, note: 'cs_...']
+  stripe_payment_intent_id    varchar(255)   [unique, note: 'pi_...']
+  stripe_invoice_id           varchar(255)   [unique, note: 'in_... — solo cobro recurrente']
+  receipt_url                 text
+  recorded_by                 integer        [ref: > app_user.id, note: 'quién registró un pago manual (efectivo/transferencia)']
+  paid_at                     timestamptz
+  created_at                  timestamptz    [not null, default: `now()`]
+
+  indexes {
+    client_id
+    subscription_id
+  }
+}
+
+Table stripe_event {
+  id            varchar(255) [pk, note: 'ID del evento de Stripe (evt_...); garantiza idempotencia']
+  type          varchar(100) [not null]
+  payload       jsonb        [not null]
+  received_at   timestamptz  [not null, default: `now()`]
+  processed_at  timestamptz  [note: 'null = pendiente de procesar']
+  error         text
+
+  Note: 'Bitácora de webhooks recibidos. Si el evento ya existe, se ignora; el worker de la cola lo procesa.'
+}
+
+// ---------- ASISTENCIA ----------
+
+Table attendance {
+  id               serial      [pk]
+  client_id        integer     [not null, ref: > client.id]
+  subscription_id  integer     [not null, ref: > subscription.id, note: 'suscripción vigente al momento del ingreso']
+  check_in_at      timestamptz [not null, default: `now()`]
+  check_out_at     timestamptz
+  recorded_by      integer     [ref: > app_user.id]
+
+  indexes {
+    (client_id, check_in_at)
+  }
+}
+
+// ---------- RUTINAS ----------
+
+Table exercise {
+  id            serial       [pk]
+  name          varchar(100) [not null, unique]
+  muscle_group  muscle_group [not null]
+  equipment     varchar(100)
+  description   text
+}
+
+Table routine {
+  id          serial        [pk]
+  name        varchar(100)  [not null]
+  description text
+  level       routine_level [not null]
+  created_by  integer       [not null, ref: > coach.id]
+  is_active   boolean       [not null, default: true]
+  created_at  timestamptz   [not null, default: `now()`]
+}
+
+Table routine_exercise {
+  id            serial       [pk]
+  routine_id    integer      [not null, ref: > routine.id]
+  exercise_id   integer      [not null, ref: > exercise.id]
+  day_number    smallint     [not null, note: 'día dentro de la rutina (1, 2, 3...)']
+  position      smallint     [not null, note: 'orden del ejercicio dentro del día']
+  sets          smallint     [not null]
+  reps          smallint     [not null]
+  weight_kg     numeric(5,2)
+  rest_seconds  smallint
+  notes         text
+
+  indexes {
+    (routine_id, day_number, position) [unique]
+  }
+}
+
+Table client_routine {
+  id          serial            [pk]
+  client_id   integer           [not null, ref: > client.id]
+  routine_id  integer           [not null, ref: > routine.id]
+  assigned_by integer           [not null, ref: > coach.id]
+  status      assignment_status [not null, default: 'ACTIVE']
+  start_date  date              [not null]
+  end_date    date
+  notes       text
+
+  indexes {
+    (client_id, status)
+  }
+}
+
+// ---------- PROGRESO FÍSICO ----------
+
+Table progress_record {
+  id            serial       [pk]
+  client_id     integer      [not null, ref: > client.id]
+  recorded_by   integer      [ref: > coach.id]
+  measured_at   date         [not null]
+  weight_kg     numeric(5,2)
+  height_cm     numeric(5,2)
+  body_fat_pct  numeric(4,1)
+  muscle_kg     numeric(5,2)
+  chest_cm      numeric(5,2)
+  waist_cm      numeric(5,2)
+  hip_cm        numeric(5,2)
+  arm_cm        numeric(5,2)
+  thigh_cm      numeric(5,2)
+  notes         text
+
+  indexes {
+    (client_id, measured_at)
+  }
+}

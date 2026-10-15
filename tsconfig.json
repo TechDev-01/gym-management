@@ -18,6 +18,8 @@
     // Type checking
     "strict": true,
     "noUncheckedIndexedAccess": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
 
     // Interop and performance
     "esModuleInterop": true,
