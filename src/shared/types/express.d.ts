@@ -1,9 +1,8 @@
 export interface AuthenticatedRequestUser {
   id: string
   role: string
-  email?: string
-  clientId?: string
-  coachId?: string
+  clientId: number | null
+  coachId: number | null
 }
 
 declare global {

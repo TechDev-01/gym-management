@@ -6,9 +6,8 @@ import type { AuthenticatedRequestUser } from '../types/express.js'
 interface JwtPayload {
   sub: string
   role: string
-  email?: string
-  clientId?: string
-  coachId?: string
+  clientId: number | null
+  coachId: number | null
 }
 
 function isJwtPayload(payload: unknown): payload is JwtPayload {
@@ -18,7 +17,12 @@ function isJwtPayload(payload: unknown): payload is JwtPayload {
 
   const candidate = payload as Record<string, unknown>
 
-  return typeof candidate.sub === 'string' && typeof candidate.role === 'string'
+  return (
+    typeof candidate.sub === 'string' &&
+    typeof candidate.role === 'string' &&
+    (typeof candidate.clientId === 'number' || candidate.clientId === null) &&
+    (typeof candidate.coachId === 'number' || candidate.coachId === null)
+  )
 }
 
 export function authenticate(jwtSecret = process.env.JWT_SECRET): RequestHandler {
@@ -44,7 +48,6 @@ export function authenticate(jwtSecret = process.env.JWT_SECRET): RequestHandler
       const authenticatedUser: AuthenticatedRequestUser = {
         id: payload.sub,
         role: payload.role,
-        email: payload.email,
         clientId: payload.clientId,
         coachId: payload.coachId,
       }

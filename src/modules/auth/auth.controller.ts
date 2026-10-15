@@ -23,4 +23,18 @@ export class AuthController {
       next(error)
     }
   }
+
+  register = async (request: Request, response: Response, next: NextFunction): Promise<void> => {
+    try {
+      const authenticatedUser = await this.authService.register(request.body)
+      response.status(201).json(authenticatedUser)
+    } catch (error: unknown) {
+      if (error instanceof ZodError) {
+        response.status(400).json({ error: 'Invalid registration request' })
+        return
+      }
+
+      next(error)
+    }
+  }
 }

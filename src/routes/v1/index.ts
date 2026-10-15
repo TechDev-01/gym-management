@@ -1,7 +1,20 @@
 import { Router } from 'express'
+import { env } from '../../config/env.js'
+import { AppDataSource } from '../../database/data-source.js'
+import { AppUser } from '../../modules/auth/app-user.entity.js'
+import { TypeOrmAuthRepository } from '../../modules/auth/auth.repository.js'
+import { AuthService } from '../../modules/auth/auth.service.js'
+import { createAuthRouter } from '../../modules/auth/auth.routes.js'
 
 export const v1Router = Router()
+
+const authRepository = new TypeOrmAuthRepository(
+  AppDataSource.getRepository(AppUser),
+)
+const authService = new AuthService(authRepository, env.JWT_SECRET)
 
 v1Router.get('/health', (_request, response) => {
   response.status(200).json({ status: 'ok' })
 })
+
+v1Router.use('/auth', createAuthRouter(authService))
