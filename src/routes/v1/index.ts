@@ -5,6 +5,7 @@ import { AppUser } from '../../modules/auth/app-user.entity.js'
 import { TypeOrmAuthRepository } from '../../modules/auth/auth.repository.js'
 import { AuthService } from '../../modules/auth/auth.service.js'
 import { createAuthRouter } from '../../modules/auth/auth.routes.js'
+import { clientsRouter } from '../../modules/clients/index.js'
 
 export const v1Router = Router()
 
@@ -18,3 +19,4 @@ v1Router.get('/health', (_request, response) => {
 })
 
 v1Router.use('/auth', createAuthRouter(authService))
+v1Router.use('/clients', clientsRouter)
