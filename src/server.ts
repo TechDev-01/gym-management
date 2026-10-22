@@ -1,6 +1,13 @@
 import { app } from './app.js'
+import { initializeDatabase } from './config/database.js'
 import { env } from './config/env.js'
 
-app.listen(env.PORT, () => {
-  console.log(`Server listening on port: ${env.PORT}`)
-})
+async function start(): Promise<void> {
+  await initializeDatabase()
+
+  app.listen(env.PORT, () => {
+    console.log(`Server listening on port: ${env.PORT}`)
+  })
+}
+
+void start()
