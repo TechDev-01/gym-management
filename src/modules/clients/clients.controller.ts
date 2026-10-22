@@ -20,4 +20,42 @@ export class ClientsController {
       next(error)
     }
   }
+
+  getClients = async (
+    _request: Request,
+    response: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      response.status(200).json(await this.clientsService.getClients())
+    } catch (error: unknown) {
+      next(error)
+    }
+  }
+
+  getClient = async (
+    request: Request,
+    response: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      response.status(200).json(await this.clientsService.getClient(request.params.id))
+    } catch (error: unknown) {
+      next(error)
+    }
+  }
+
+  update = async (
+    request: Request,
+    response: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      response
+        .status(200)
+        .json(await this.clientsService.updateClient(request.params.id, request.body))
+    } catch (error: unknown) {
+      next(error)
+    }
+  }
 }

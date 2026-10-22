@@ -4,6 +4,7 @@ export interface ClientsHealthResponse {
 }
 export interface CreateClientInput {
   email: string
+  password?: string
   dni: string
   name: string
   lastName: string
@@ -19,4 +20,12 @@ export interface ClientResponse {
   phone: string
   isActive: boolean
   createdAt: Date
+}
+
+export interface UpdateClientInput {
+  email?: string
+  dni?: string
+  name?: string
+  lastName?: string
+  phone?: string
 }
