@@ -10,6 +10,9 @@ export class Membership {
   @Column({ type: 'varchar', length: 50, unique: true })
   name!: string
 
+  @Column({ type: 'text', nullable: true })
+  description!: string | null
+
   @Column({ name: 'duration_days', type: 'integer' })
   durationDays!: number
 
