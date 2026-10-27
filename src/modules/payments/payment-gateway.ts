@@ -3,7 +3,16 @@ import { env } from '../../config/env.js'
 import { PaymentGatewayError } from '../../shared/errors/payment-gateway.error.js'
 import type { CheckoutSessionInput } from '../memberships/types.js'
 
-export class StripePaymentGateway {
+export interface StripeGateway {
+  createCheckoutSession(input: CheckoutSessionInput): Promise<{
+    sessionId: string
+    checkoutUrl: string | null
+  }>
+  expireCheckout(sessionId: string): Promise<void>
+  constructEvent(payload: Buffer, signature: string): Stripe.Event
+}
+
+export class StripePaymentGateway implements StripeGateway {
   private readonly stripe = new Stripe(env.STRIPE_SECRET_KEY)
 
   async createCheckoutSession(input: CheckoutSessionInput): Promise<{

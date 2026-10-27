@@ -4,15 +4,32 @@ import { ConflictError } from '../../shared/errors/conflict.error.js'
 import { PaymentGatewayError } from '../../shared/errors/payment-gateway.error.js'
 import type { CheckoutSessionInput, PaymentGateway, PendingPaymentInput } from '../memberships/types.js'
 import { PaymentStatus } from './payment.entity.js'
-import { StripePaymentGateway } from './payment-gateway.js'
+import type { StripeGateway } from './payment-gateway.js'
 import { PaymentsRepository } from './payments.repository.js'
 import { getStripeWebhooksQueue } from '../../jobs/queues.js'
 import { NotificationService } from '../../jobs/services.js'
 
+export type PaymentsServiceRepository = Pick<
+  PaymentsRepository,
+  | 'createPendingPayment'
+  | 'attachCheckoutSession'
+  | 'updatePayment'
+  | 'findPendingBySubscription'
+  | 'findSubscriptionById'
+  | 'findMembershipById'
+  | 'findById'
+  | 'findByStripePaymentIntentId'
+  | 'activateSubscription'
+  | 'findStripeEvent'
+  | 'saveStripeEvent'
+  | 'markStripeEventProcessed'
+  | 'markStripeEventFailed'
+>
+
 export class PaymentsService implements PaymentGateway {
   constructor(
-    private readonly repository: PaymentsRepository,
-    private readonly stripeGateway: StripePaymentGateway,
+    private readonly repository: PaymentsServiceRepository,
+    private readonly stripeGateway: StripeGateway,
     private readonly timezone = 'UTC',
     private readonly notificationService = new NotificationService(),
   ) {}
