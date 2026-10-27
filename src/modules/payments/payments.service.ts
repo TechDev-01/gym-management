@@ -6,7 +6,6 @@ import type { CheckoutSessionInput, PaymentGateway, PendingPaymentInput } from '
 import { PaymentStatus } from './payment.entity.js'
 import { StripePaymentGateway } from './payment-gateway.js'
 import { PaymentsRepository } from './payments.repository.js'
-import { getStripeWebhooksQueue } from '../../jobs/queues.js'
 
 export class PaymentsService implements PaymentGateway {
   constructor(
@@ -56,12 +55,7 @@ export class PaymentsService implements PaymentGateway {
     const existing = await this.repository.findStripeEvent(event.id)
     if (existing?.processedAt) return
     if (!existing) await this.repository.saveStripeEvent(event)
-
-    await getStripeWebhooksQueue().add(
-      'process-stripe-webhook',
-      { eventId: event.id },
-      { jobId: event.id },
-    )
+    await this.processQueuedWebhook(event.id)
   }
 
   async processQueuedWebhook(eventId: string): Promise<void> {
