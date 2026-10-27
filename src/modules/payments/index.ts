@@ -9,6 +9,7 @@ import { PaymentsController } from './payments.controller.js'
 import { PaymentsRepository } from './payments.repository.js'
 import { createPaymentsRouter } from './payments.routes.js'
 import { PaymentsService } from './payments.service.js'
+import { NotificationService } from '../../jobs/services.js'
 
 const paymentsService = new PaymentsService(
   new PaymentsRepository(
@@ -19,6 +20,7 @@ const paymentsService = new PaymentsService(
   ),
   new StripePaymentGateway(),
   env.GYM_TIMEZONE,
+  new NotificationService(),
 )
 
 export const paymentGateway = paymentsService

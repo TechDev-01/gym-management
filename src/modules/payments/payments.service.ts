@@ -7,12 +7,14 @@ import { PaymentStatus } from './payment.entity.js'
 import { StripePaymentGateway } from './payment-gateway.js'
 import { PaymentsRepository } from './payments.repository.js'
 import { getStripeWebhooksQueue } from '../../jobs/queues.js'
+import { NotificationService } from '../../jobs/services.js'
 
 export class PaymentsService implements PaymentGateway {
   constructor(
     private readonly repository: PaymentsRepository,
     private readonly stripeGateway: StripePaymentGateway,
     private readonly timezone = 'UTC',
+    private readonly notificationService = new NotificationService(),
   ) {}
 
   async createPendingPayment(manager: EntityManager, input: PendingPaymentInput): Promise<{ paymentId: number }> {
@@ -49,6 +51,13 @@ export class PaymentsService implements PaymentGateway {
       recordedById,
       paidAt: new Date(),
     })
+    await this.notificationService.enqueue(
+      {
+        type: 'payment-confirmed',
+        payload: { paymentId: payment.id, subscriptionId },
+      },
+      `payment-confirmed-${payment.id}`,
+    )
   }
 
   async handleWebhook(payload: Buffer, signature: string): Promise<void> {
@@ -114,6 +123,13 @@ export class PaymentsService implements PaymentGateway {
       paidAt: new Date(),
     })
     await this.repository.activateSubscription(subscriptionId, startDate, addDays(startDate, membership.durationDays - 1))
+    await this.notificationService.enqueue(
+      {
+        type: 'payment-confirmed',
+        payload: { paymentId, subscriptionId },
+      },
+      `payment-confirmed-${paymentId}`,
+    )
   }
 
   private async processPaymentIntentFailed(paymentIntent: Stripe.PaymentIntent): Promise<void> {
