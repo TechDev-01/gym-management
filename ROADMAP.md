@@ -61,8 +61,7 @@ estadisticas, autenticacion por roles, Stripe y jobs asincronos con BullMQ.
 - Implementar `coaches`: registro, consulta, actualizacion y horarios.
 - Implementar `memberships`: catalogo de planes y contratacion por cliente.
 - Implementar `attendance`: registro de entrada/salida validando suscripcion activa.
-- Implementar `routines`: ejercicios, rutinas, ejercicios por rutina y asignaciones a
-  clientes.
+- Implementar `routines`: ejercicios, rutinas, ejercicios por rutina y asignaciones a clientes.
 - Implementar `progress`: registro historico de mediciones fisicas.
 - Mantener cada modulo autocontenido con `routes`, `controller`, `service`,
   `repository`, `schemas`, `types` e `index`.
