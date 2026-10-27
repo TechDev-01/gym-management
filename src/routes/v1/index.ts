@@ -9,6 +9,7 @@ import { clientsRouter } from '../../modules/clients/index.js'
 import { membershipsRouter, subscriptionsRouter } from '../../modules/memberships/index.js'
 import { coachesRouter } from '../../modules/coaches/index.js'
 import { attendanceRouter } from '../../modules/attendance/index.js'
+import { routinesRouter } from '../../modules/routines/index.js'
 
 export const v1Router = Router()
 
@@ -27,3 +28,4 @@ v1Router.use('/memberships', membershipsRouter)
 v1Router.use('/subscriptions', subscriptionsRouter)
 v1Router.use('/coaches', coachesRouter)
 v1Router.use('/attendance', attendanceRouter)
+v1Router.use('/routines', routinesRouter)
