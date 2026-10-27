@@ -3,10 +3,13 @@ import type { MembershipsRepository } from '../modules/memberships/memberships.r
 import { SubscriptionStatus } from '../modules/memberships/subscription.entity.js'
 import { NotificationService } from './services.js'
 
+type MembershipExpiryRepository = Pick<MembershipsRepository, 'listActiveSubscriptionsEndingOn'>
+type MembershipExpiryNotifier = Pick<NotificationService, 'enqueue'>
+
 export class MembershipExpiryService {
   constructor(
-    private readonly repository: MembershipsRepository,
-    private readonly notificationService: NotificationService,
+    private readonly repository: MembershipExpiryRepository,
+    private readonly notificationService: MembershipExpiryNotifier,
     private readonly timezone = 'UTC',
   ) {}
 
