@@ -10,11 +10,18 @@ import {
 import { paymentGateway } from './modules/payments/index.js'
 import { AppDataSource } from './database/data-source.js'
 import { membershipExpiryService } from './modules/memberships/index.js'
+import { statsService } from './modules/stats/index.js'
+import { ReportService } from './jobs/services.js'
 
 async function start(): Promise<void> {
   await initializeDatabase()
   await scheduleMembershipExpiry(env.GYM_TIMEZONE)
-  const workers = createWorkers(paymentGateway, undefined, undefined, membershipExpiryService)
+  const workers = createWorkers(
+    paymentGateway,
+    undefined,
+    new ReportService(statsService),
+    membershipExpiryService,
+  )
 
   const server = app.listen(env.PORT, () => {
     console.log(`Server listening on port: ${env.PORT}`)

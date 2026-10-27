@@ -11,6 +11,7 @@ import { coachesRouter } from '../../modules/coaches/index.js'
 import { attendanceRouter } from '../../modules/attendance/index.js'
 import { routinesRouter } from '../../modules/routines/index.js'
 import { progressRouter } from '../../modules/progress/index.js'
+import { statsRouter } from '../../modules/stats/index.js'
 
 export const v1Router = Router()
 
@@ -31,3 +32,4 @@ v1Router.use('/coaches', coachesRouter)
 v1Router.use('/attendance', attendanceRouter)
 v1Router.use('/routines', routinesRouter)
 v1Router.use('/progress', progressRouter)
+v1Router.use('/stats', statsRouter)
