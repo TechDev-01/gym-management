@@ -20,6 +20,7 @@ export interface MembershipsRepository {
   setMembershipActive(id: number, isActive: boolean): Promise<Membership>
   findClientById(id: number): Promise<Client | null>
   findSubscriptionById(id: number): Promise<Subscription | null>
+  listActiveSubscriptionsEndingOn(endDate: string): Promise<Subscription[]>
   listSubscriptions(filters: SubscriptionFilters): Promise<Subscription[]>
   findClientSubscription(clientId: number, status: SubscriptionStatus): Promise<Subscription | null>
   createSubscription(input: CreateSubscriptionInput): Promise<Subscription>
@@ -91,6 +92,12 @@ export class TypeOrmMembershipsRepository implements MembershipsRepository {
 
   findSubscriptionById(id: number): Promise<Subscription | null> {
     return this.subscriptionRepository.findOneBy({ id })
+  }
+
+  listActiveSubscriptionsEndingOn(endDate: string): Promise<Subscription[]> {
+    return this.subscriptionRepository.find({
+      where: { status: SubscriptionStatus.ACTIVE, endDate },
+    })
   }
 
   listSubscriptions(filters: SubscriptionFilters): Promise<Subscription[]> {

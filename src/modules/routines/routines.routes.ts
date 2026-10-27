@@ -4,10 +4,14 @@ import { requireRole } from '../../shared/middlewares/role.middleware.js'
 import { RoutinesController } from './routines.controller.js'
 import type { RoutinesRepository } from './routines.repository.js'
 import { RoutinesService } from './routines.service.js'
+import { NotificationService } from '../../jobs/services.js'
 
-export function createRoutinesRouter(repository: RoutinesRepository): Router {
+export function createRoutinesRouter(
+  repository: RoutinesRepository,
+  notificationService = new NotificationService(),
+): Router {
   const router = Router()
-  const controller = new RoutinesController(new RoutinesService(repository))
+  const controller = new RoutinesController(new RoutinesService(repository, notificationService))
   const managers = requireRole('ADMIN', 'COACH')
   const assigners = requireRole('ADMIN', 'COACH')
 

@@ -24,9 +24,13 @@ import {
   updateRoutineSchema,
 } from './routines.schema.js'
 import type { UserContext } from './types.js'
+import { NotificationService } from '../../jobs/services.js'
 
 export class RoutinesService {
-  constructor(private readonly repository: RoutinesRepository) {}
+  constructor(
+    private readonly repository: RoutinesRepository,
+    private readonly notificationService = new NotificationService(),
+  ) {}
 
   async listExercises(): Promise<Exercise[]> { return this.repository.listExercises() }
 
@@ -155,7 +159,19 @@ export class RoutinesService {
     const assignedById = user.role === 'COACH' ? this.requireCoachId(user) : data.assignedById
     if (!assignedById) throw new ConflictError('assignedById is required for an admin assignment')
     if (!await this.repository.findCoach(assignedById)) throw new NotFoundError('Coach not found')
-    return this.repository.createAssignment({ ...data, clientId, assignedById })
+    const assignment = await this.repository.createAssignment({ ...data, clientId, assignedById })
+    await this.notificationService.enqueue(
+      {
+        type: 'routine-assigned',
+        payload: {
+          assignmentId: assignment.id,
+          clientId: assignment.clientId,
+          routineId: assignment.routineId,
+        },
+      },
+      `routine-assigned-${assignment.id}`,
+    )
+    return assignment
   }
 
   async updateAssignmentStatus(inputId: unknown, input: unknown, user: UserContext): Promise<ClientRoutine> {

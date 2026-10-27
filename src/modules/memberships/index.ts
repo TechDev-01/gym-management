@@ -6,6 +6,8 @@ import { Membership } from './membership.entity.js'
 import { TypeOrmMembershipsRepository } from './memberships.repository.js'
 import { createMembershipsRouter, createSubscriptionsRouter } from './memberships.routes.js'
 import { Subscription } from './subscription.entity.js'
+import { MembershipExpiryService } from '../../jobs/membership-expiry.service.js'
+import { NotificationService } from '../../jobs/services.js'
 
 const repository = new TypeOrmMembershipsRepository(
   AppDataSource.getRepository(Membership),
@@ -14,4 +16,9 @@ const repository = new TypeOrmMembershipsRepository(
 )
 export const membershipsRouter = createMembershipsRouter(repository, paymentGateway, env.GYM_TIMEZONE)
 export const subscriptionsRouter = createSubscriptionsRouter(repository, paymentGateway, env.GYM_TIMEZONE)
+export const membershipExpiryService = new MembershipExpiryService(
+  repository,
+  new NotificationService(),
+  env.GYM_TIMEZONE,
+)
 export default membershipsRouter
