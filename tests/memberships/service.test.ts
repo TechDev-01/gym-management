@@ -68,7 +68,13 @@ function createRepository(overrides: Partial<MembershipsRepository> = {}): Membe
 
 function createGateway(overrides: Partial<PaymentGateway> = {}): PaymentGateway {
   return {
-    prepare: async () => ({ checkoutUrl: 'https://checkout.test/session' }),
+    createPendingPayment: async () => ({ paymentId: 20 }),
+    createCheckoutSession: async () => ({
+      sessionId: 'cs_test',
+      checkoutUrl: 'https://checkout.test/session',
+    }),
+    attachCheckoutSession: async () => {},
+    markPaymentFailed: async () => {},
     expirePendingCheckout: async () => {},
     confirmManualPayment: async () => {},
     ...overrides,

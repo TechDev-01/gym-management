@@ -1,12 +1,13 @@
 import Stripe from 'stripe'
 import type { NextFunction, Request, Response } from 'express'
-import type { Repository } from 'typeorm'
+import type { EntityManager, Repository } from 'typeorm'
 import { env } from '../../config/env.js'
 import { ConflictError } from '../../shared/errors/conflict.error.js'
+import { PaymentGatewayError } from '../../shared/errors/payment-gateway.error.js'
 import { Client } from '../clients/client.entity.js'
 import { Membership } from '../memberships/membership.entity.js'
 import { Subscription } from '../memberships/subscription.entity.js'
-import type { PaymentGateway, PaymentPreparation } from '../memberships/types.js'
+import type { CheckoutSessionInput, PaymentGateway, PendingPaymentInput } from '../memberships/types.js'
 import { SubscriptionStatus } from '../memberships/subscription.entity.js'
 import { Payment, PaymentMethod, PaymentStatus } from './payment.entity.js'
 import { StripeEvent } from './stripe-event.entity.js'
@@ -24,20 +25,18 @@ export class TypeOrmPaymentGateway implements PaymentGateway {
     this.stripe = new Stripe(env.STRIPE_SECRET_KEY)
   }
 
-  async prepare(input: PaymentPreparation): Promise<{ checkoutUrl: string | null }> {
-    const subscription = await this.subscriptionRepository.findOneBy({ id: input.subscriptionId })
-    if (!subscription) throw new ConflictError('Subscription not found while preparing payment')
-    const membership = await this.membershipRepository.findOneBy({ id: subscription.membershipId })
-    const client = await this.clientRepository.findOneBy({ id: subscription.clientId })
-    if (!membership || !client) throw new ConflictError('Payment references are no longer available')
-
-    const payment = await this.paymentRepository.save(this.paymentRepository.create({
-      clientId: client.id,
-      subscriptionId: subscription.id,
+  async createPendingPayment(
+    manager: EntityManager,
+    input: PendingPaymentInput,
+  ): Promise<{ paymentId: number }> {
+    const paymentRepository = manager.getRepository(Payment)
+    const payment = await paymentRepository.save(paymentRepository.create({
+      clientId: input.clientId,
+      subscriptionId: input.subscriptionId,
       method: input.method,
       status: PaymentStatus.PENDING,
-      amount: membership.priceAmount,
-      currency: membership.currency,
+      amount: input.amount,
+      currency: input.currency,
       refundedAmount: 0,
       stripeCheckoutSessionId: null,
       stripePaymentIntentId: null,
@@ -46,35 +45,56 @@ export class TypeOrmPaymentGateway implements PaymentGateway {
       recordedById: null,
       paidAt: null,
     }))
+    return { paymentId: payment.id }
+  }
 
-    if (input.method !== PaymentMethod.CARD) return { checkoutUrl: null }
-
-    const price = membership.stripePriceId
-      ? { price: membership.stripePriceId, quantity: 1 }
+  async createCheckoutSession(input: CheckoutSessionInput): Promise<{
+    sessionId: string
+    checkoutUrl: string | null
+  }> {
+    const price = input.membershipPriceId
+      ? { price: input.membershipPriceId, quantity: 1 }
       : {
           price_data: {
-            currency: membership.currency.toLowerCase(),
-            product_data: { name: membership.name },
-            unit_amount: membership.priceAmount,
+            currency: input.currency.toLowerCase(),
+            product_data: { name: input.membershipName },
+            unit_amount: input.amount,
           },
           quantity: 1,
         }
-    const session = await this.stripe.checkout.sessions.create({
-      mode: 'payment',
-      line_items: [price],
-      customer_email: client.email ?? undefined,
-      success_url: env.STRIPE_SUCCESS_URL,
-      cancel_url: env.STRIPE_CANCEL_URL,
-      metadata: {
-        subscription_id: String(subscription.id),
-        payment_id: String(payment.id),
-      },
-    })
+    try {
+      const session = await this.stripe.checkout.sessions.create({
+        mode: 'payment',
+        line_items: [price],
+        customer_email: input.clientEmail ?? undefined,
+        success_url: env.STRIPE_SUCCESS_URL,
+        cancel_url: env.STRIPE_CANCEL_URL,
+        metadata: {
+          subscription_id: String(input.subscriptionId),
+          payment_id: String(input.paymentId),
+        },
+      })
 
-    await this.paymentRepository.update(payment.id, {
-      stripeCheckoutSessionId: session.id,
+      return { sessionId: session.id, checkoutUrl: session.url }
+    } catch (error: unknown) {
+      throw new PaymentGatewayError(getPaymentProviderMessage(error))
+    }
+  }
+
+  async attachCheckoutSession(paymentId: number, sessionId: string): Promise<void> {
+    try {
+      await this.paymentRepository.update(paymentId, {
+        stripeCheckoutSessionId: sessionId,
+      })
+    } catch (error: unknown) {
+      throw new PaymentGatewayError('Checkout was created but could not be linked to the payment')
+    }
+  }
+
+  async markPaymentFailed(paymentId: number): Promise<void> {
+    await this.paymentRepository.update(paymentId, {
+      status: PaymentStatus.FAILED,
     })
-    return { checkoutUrl: session.url }
   }
 
   async expirePendingCheckout(subscriptionId: number): Promise<void> {
@@ -162,6 +182,18 @@ export class TypeOrmPaymentGateway implements PaymentGateway {
       throw error
     }
   }
+}
+
+function getPaymentProviderMessage(error: unknown): string {
+  if (error instanceof Stripe.errors.StripeError) {
+    return `Stripe checkout failed: ${error.message}`
+  }
+
+  if (error instanceof Error) {
+    return `Payment provider failed: ${error.message}`
+  }
+
+  return 'Payment provider failed'
 }
 
 export function createPaymentWebhookHandler(gateway: TypeOrmPaymentGateway) {

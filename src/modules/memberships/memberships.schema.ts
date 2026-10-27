@@ -13,6 +13,7 @@ export const createMembershipSchema = z.object({
   maxDaysPerWeek: z.number().int().positive().max(7).nullable().optional(),
   priceAmount: z.number().int().nonnegative(),
   currency: z.string().trim().length(3).toLowerCase().default('usd'),
+  stripePriceId: z.string().trim().min(1).startsWith('price_').nullable().optional(),
 }).strict()
 
 export const updateMembershipSchema = z.object({

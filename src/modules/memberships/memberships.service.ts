@@ -44,6 +44,7 @@ export class MembershipsService {
       ...data,
       description: data.description ?? null,
       maxDaysPerWeek: data.maxDaysPerWeek ?? null,
+      stripePriceId: data.stripePriceId ?? null,
     }))
   }
 
@@ -76,9 +77,11 @@ export class MembershipsService {
       throw new ForbiddenError('Clients can only create their own subscriptions')
     }
 
-    return this.repository.withTransaction(async (repository) => {
+    const purchase = await this.repository.withTransaction(async (repository, manager) => {
       const client = await repository.findClientById(data.clientId)
-      if (!client || !client.isActive) throw new NotFoundError('Active client not found')
+      if (!client || !client.isActive) {
+        throw new NotFoundError('Active client not found')
+      }
       const membership = await repository.findMembershipById(data.membershipId)
       if (!membership || !membership.isActive) throw new ConflictError('Membership is not active')
       if (await repository.findClientSubscription(data.clientId, SubscriptionStatus.ACTIVE)) {
@@ -88,7 +91,6 @@ export class MembershipsService {
       const pending = await repository.findClientSubscription(data.clientId, SubscriptionStatus.PENDING)
       if (pending) {
         await repository.cancelSubscription(pending.id)
-        if (this.paymentGateway) await this.paymentGateway.expirePendingCheckout(pending.id)
       }
 
       const subscription = await repository.createSubscription({
@@ -96,12 +98,57 @@ export class MembershipsService {
         membershipId: membership.id,
         method: data.method,
       })
-      const payment = this.paymentGateway
-        ? await this.paymentGateway.prepare({ subscriptionId: subscription.id, method: data.method })
-        : { checkoutUrl: null }
 
-      return { ...toSubscriptionResponse(subscription), checkoutUrl: payment.checkoutUrl }
+      const payment = this.paymentGateway
+        ? await this.paymentGateway.createPendingPayment(manager, {
+            subscriptionId: subscription.id,
+            clientId: client.id,
+            amount: membership.priceAmount,
+            currency: membership.currency,
+            method: data.method,
+          })
+        : null
+
+      return {
+        subscription,
+        clientEmail: client.email,
+        membershipName: membership.name,
+        membershipPriceId: membership.stripePriceId,
+        membershipAmount: membership.priceAmount,
+        membershipCurrency: membership.currency,
+        paymentId: payment?.paymentId ?? null,
+        previousPendingId: pending?.id ?? null,
+      }
     })
+
+    if (purchase.previousPendingId && this.paymentGateway) {
+      await this.paymentGateway.expirePendingCheckout(purchase.previousPendingId)
+    }
+
+    let checkoutUrl: string | null = null
+    if (this.paymentGateway && purchase.paymentId && data.method === 'CARD') {
+      try {
+        const checkout = await this.paymentGateway.createCheckoutSession({
+          subscriptionId: purchase.subscription.id,
+          paymentId: purchase.paymentId,
+          membershipName: purchase.membershipName,
+          membershipPriceId: purchase.membershipPriceId,
+          amount: purchase.membershipAmount,
+          currency: purchase.membershipCurrency,
+          clientEmail: purchase.clientEmail,
+        })
+        await this.paymentGateway.attachCheckoutSession(purchase.paymentId, checkout.sessionId)
+        checkoutUrl = checkout.checkoutUrl
+      } catch (error: unknown) {
+        await this.paymentGateway.markPaymentFailed(purchase.paymentId)
+        throw error
+      }
+    }
+
+    return {
+      ...toSubscriptionResponse(purchase.subscription),
+      checkoutUrl,
+    }
   }
 
   async listSubscriptions(filters: { clientId?: number; status?: SubscriptionStatus }, user: { role: string; clientId: number | null }): Promise<SubscriptionResponse[]> {

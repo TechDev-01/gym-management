@@ -25,7 +25,9 @@ export interface MembershipsRepository {
   createSubscription(input: CreateSubscriptionInput): Promise<Subscription>
   cancelSubscription(id: number): Promise<Subscription>
   activateSubscription(id: number, startDate: string, endDate: string): Promise<Subscription>
-  withTransaction<T>(work: (repository: MembershipsRepository) => Promise<T>): Promise<T>
+  withTransaction<T>(
+    work: (repository: MembershipsRepository, manager: EntityManager) => Promise<T>,
+  ): Promise<T>
 }
 
 export class TypeOrmMembershipsRepository implements MembershipsRepository {
@@ -133,7 +135,9 @@ export class TypeOrmMembershipsRepository implements MembershipsRepository {
     return subscription
   }
 
-  withTransaction<T>(work: (repository: MembershipsRepository) => Promise<T>): Promise<T> {
-    return this.membershipRepository.manager.transaction((manager) => work(this.fromManager(manager)))
+  withTransaction<T>(
+    work: (repository: MembershipsRepository, manager: EntityManager) => Promise<T>,
+  ): Promise<T> {
+    return this.membershipRepository.manager.transaction((manager) => work(this.fromManager(manager), manager))
   }
 }

@@ -1,4 +1,5 @@
 import type { PaymentMethod } from '../payments/payment.entity.js'
+import type { EntityManager } from 'typeorm'
 import type { Membership } from './membership.entity.js'
 import type { Subscription, SubscriptionStatus } from './subscription.entity.js'
 
@@ -9,6 +10,7 @@ export interface CreateMembershipInput {
   maxDaysPerWeek: number | null
   priceAmount: number
   currency: string
+  stripePriceId: string | null
 }
 
 export interface UpdateMembershipInput {
@@ -43,6 +45,7 @@ export interface MembershipResponse {
   priceAmount: number
   currency: string
   isActive: boolean
+  stripePriceId: string | null
 }
 
 export interface SubscriptionResponse {
@@ -55,13 +58,35 @@ export interface SubscriptionResponse {
   createdAt: Date
 }
 
-export interface PaymentPreparation {
+export interface PendingPaymentInput {
   subscriptionId: number
+  clientId: number
+  amount: number
+  currency: string
   method: PaymentMethod
 }
 
+export interface CheckoutSessionInput {
+  subscriptionId: number
+  paymentId: number
+  membershipName: string
+  membershipPriceId: string | null
+  amount: number
+  currency: string
+  clientEmail: string | null
+}
+
 export interface PaymentGateway {
-  prepare(input: PaymentPreparation): Promise<{ checkoutUrl: string | null }>
+  createPendingPayment(
+    manager: EntityManager,
+    input: PendingPaymentInput,
+  ): Promise<{ paymentId: number }>
+  createCheckoutSession(input: CheckoutSessionInput): Promise<{
+    sessionId: string
+    checkoutUrl: string | null
+  }>
+  attachCheckoutSession(paymentId: number, sessionId: string): Promise<void>
+  markPaymentFailed(paymentId: number): Promise<void>
   expirePendingCheckout(subscriptionId: number): Promise<void>
   confirmManualPayment(subscriptionId: number, recordedById: number): Promise<void>
 }
@@ -75,6 +100,7 @@ export function toMembershipResponse(membership: Membership): MembershipResponse
     maxDaysPerWeek: membership.maxDaysPerWeek,
     priceAmount: membership.priceAmount,
     currency: membership.currency,
+    stripePriceId: membership.stripePriceId,
     isActive: membership.isActive,
   }
 }
