@@ -8,6 +8,7 @@ import { createAuthRouter } from '../../modules/auth/auth.routes.js'
 import { clientsRouter } from '../../modules/clients/index.js'
 import { membershipsRouter, subscriptionsRouter } from '../../modules/memberships/index.js'
 import { coachesRouter } from '../../modules/coaches/index.js'
+import { attendanceRouter } from '../../modules/attendance/index.js'
 
 export const v1Router = Router()
 
@@ -25,3 +26,4 @@ v1Router.use('/clients', clientsRouter)
 v1Router.use('/memberships', membershipsRouter)
 v1Router.use('/subscriptions', subscriptionsRouter)
 v1Router.use('/coaches', coachesRouter)
+v1Router.use('/attendance', attendanceRouter)
