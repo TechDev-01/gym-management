@@ -1,8 +1,16 @@
-# Gym Management API
+# Gym Management Monorepo
 
 Backend académico para la gestión de clientes, entrenadores, membresías, pagos,
 asistencia, rutinas, progreso y estadísticas. La API usa TypeScript, Express,
-PostgreSQL, TypeORM, Redis y BullMQ.
+PostgreSQL, TypeORM, Redis y BullMQ, además de un frontend web inicial.
+
+## Estructura
+
+```text
+apps/
+├── api/  # Backend y pruebas
+└── web/  # Frontend web
+```
 
 ## Requisitos
 
@@ -16,17 +24,19 @@ PostgreSQL, TypeORM, Redis y BullMQ.
 npm ci
 cp .env.example .env
 docker compose up -d
-npm run build
-npx typeorm migration:run -d dist/database/data-source.js
-npm run seed
+npm run build --workspace @gym-management/api
+npx typeorm migration:run -d apps/api/dist/database/data-source.js
+npm run seed --workspace @gym-management/api
 ```
 
-Después, iniciar el servidor con el comando disponible para desarrollo:
+Después, iniciar la API y el frontend en terminales separadas:
 
 ```bash
-npm run dev
+npm run dev:api
+npm run dev:web
 ```
 
+La aplicación web queda disponible en `http://localhost:5173`.
 La documentación interactiva queda disponible en `http://localhost:3000/api/docs`.
 El documento OpenAPI está disponible en `http://localhost:3000/api/docs.json`.
 

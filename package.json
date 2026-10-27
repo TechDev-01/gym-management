@@ -1,39 +1,16 @@
 {
+  "name": "gym-management",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc -w",
-    "seed": "tsx src/seed.ts",
-    "typecheck": "tsc --noEmit",
-    "lint": "tsc --noEmit",
-    "test": "node --import tsx --test tests/**/*.test.ts"
-  },
-  "devDependencies": {
-    "@types/bcrypt": "^6.0.0",
-    "@types/cookie-parser": "^1.4.10",
-    "@types/express": "^5.0.6",
-    "@types/jsonwebtoken": "^9.0.10",
-    "@types/node": "^26.6.5",
-    "@types/pg": "^8.23.1",
-    "@types/swagger-ui-express": "^4.1.8",
-    "eslint": "^10.12.0",
-    "ts-node": "^10.9.2",
-    "tsx": "^4.23.15",
-    "typescript": "^7.0.2"
-  },
-  "dependencies": {
-    "bcrypt": "^6.0.0",
-    "bullmq": "^6.3.11",
-    "cookie-parser": "^1.4.7",
-    "dotenv": "^18.0.4",
-    "express": "^5.2.1",
-    "express-rate-limit": "^8.7.0",
-    "ioredis": "^5.11.1",
-    "jsonwebtoken": "^9.0.3",
-    "pg": "^8.23.0",
-    "reflect-metadata": "^0.2.2",
-    "stripe": "^23.0.0",
-    "swagger-ui-express": "^5.0.1",
-    "typeorm": "^1.1.1",
-    "zod": "^4.6.5"
+    "build": "npm run build --workspace @gym-management/api && npm run build --workspace @gym-management/web",
+    "dev": "npm run dev --workspace @gym-management/api",
+    "dev:api": "npm run dev --workspace @gym-management/api",
+    "dev:web": "npm run dev --workspace @gym-management/web",
+    "lint": "npm run lint --workspace @gym-management/api",
+    "test": "npm test --workspace @gym-management/api",
+    "typecheck": "npm run typecheck --workspace @gym-management/api && npm run typecheck --workspace @gym-management/web"
   }
 }
