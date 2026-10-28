@@ -1,0 +1,103 @@
+services:
+  - type: web
+    name: gym-management-api
+    runtime: node
+    region: frankfurt
+    buildCommand: npm ci && npm run build
+    preDeployCommand: npx typeorm migration:run -d apps/api/dist/database/data-source.js
+    startCommand: node apps/api/dist/server.js
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: CORS_ORIGIN
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: gym-management-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: REDIS_URL
+        fromService:
+          name: gym-management-redis
+          type: keyvalue
+          property: connectionString
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_SUCCESS_URL
+        sync: false
+      - key: STRIPE_CANCEL_URL
+        sync: false
+      - key: GYM_TIMEZONE
+        value: America/Bogota
+
+  - type: worker
+    name: gym-management-worker
+    runtime: node
+    region: frankfurt
+    buildCommand: npm ci && npm run build
+    startCommand: node apps/api/dist/worker.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: gym-management-db
+          property: connectionString
+      - key: JWT_SECRET
+        fromService:
+          name: gym-management-api
+          type: web
+          envVarKey: JWT_SECRET
+      - key: REDIS_URL
+        fromService:
+          name: gym-management-redis
+          type: keyvalue
+          property: connectionString
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_SUCCESS_URL
+        sync: false
+      - key: STRIPE_CANCEL_URL
+        sync: false
+      - key: GYM_TIMEZONE
+        value: America/Bogota
+
+  - type: web
+    name: gym-management-web
+    runtime: static
+    region: frankfurt
+    buildCommand: npm ci && npm run build --workspace @gym-management/web
+    staticPublishPath: apps/web/dist
+    previews:
+      generation: automatic
+    envVars:
+      - key: VITE_API_URL
+        sync: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /index.html
+        name: Cache-Control
+        value: no-cache
+
+  - type: keyvalue
+    name: gym-management-redis
+    region: frankfurt
+    ipAllowList: []
+    persistenceMode: journal-snapshot
+
+databases:
+  - name: gym-management-db
+    region: frankfurt
+    postgresMajorVersion: "17"

@@ -81,6 +81,10 @@ La estrategia de pruebas del frontend está documentada en
 npm run test:web
 ```
 
+La preparación de despliegue completo (frontend, API, PostgreSQL, Redis y
+workers) está documentada en [docs/deployment.md](docs/deployment.md) y se
+automatiza mediante [render.yaml](render.yaml).
+
 ## Stripe y jobs
 
 El webhook debe reenviarse a

@@ -1,36 +1,19 @@
 import { app } from './app.js'
 import { initializeDatabase } from './config/database.js'
 import { env } from './config/env.js'
-import {
-  closeQueues,
-  createWorkers,
-  closeWorkers,
-  scheduleMembershipExpiry,
-} from './jobs/index.js'
-import { paymentGateway } from './modules/payments/index.js'
 import { AppDataSource } from './database/data-source.js'
-import { membershipExpiryService } from './modules/memberships/index.js'
-import { statsService } from './modules/stats/index.js'
-import { ReportService } from './jobs/services.js'
 
 async function start(): Promise<void> {
   await initializeDatabase()
-  await scheduleMembershipExpiry(env.GYM_TIMEZONE)
-  const workers = createWorkers(
-    paymentGateway,
-    undefined,
-    new ReportService(statsService),
-    membershipExpiryService,
-  )
 
-  const server = app.listen(env.PORT, () => {
+  const server = app.listen(env.PORT, '0.0.0.0', () => {
     console.log(`Server listening on port: ${env.PORT}`)
   })
 
   const shutdown = async (): Promise<void> => {
-    server.close()
-    await closeWorkers(workers)
-    await closeQueues()
+    await new Promise<void>((resolve, reject) => {
+      server.close((error) => (error ? reject(error) : resolve()))
+    })
     await AppDataSource.destroy()
   }
 
@@ -38,4 +21,7 @@ async function start(): Promise<void> {
   process.once('SIGTERM', () => void shutdown())
 }
 
-void start()
+void start().catch((error: unknown) => {
+  console.error('Unable to start API server', error)
+  process.exitCode = 1
+})

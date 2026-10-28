@@ -29,6 +29,7 @@ button { cursor: pointer; border: 0; }
 .avatar { align-items: center; background: #8d5cf6; border-radius: 50%; color: white; display: inline-flex; flex: 0 0 auto; font-size: 10px; font-weight: 700; height: 34px; justify-content: center; width: 34px; }
 .avatar-pink { background: #ec7599; }.avatar-yellow { background: #ddad58; }.avatar-cyan { background: #42baca; }.avatar-purple { background: #8e77de; }
 .main-content { background: #0d111b; flex: 1; min-width: 0; }
+.runtime-error { align-items: flex-start; background: #0d111b; display: flex; flex-direction: column; justify-content: center; min-height: 100vh; padding: 32px; }
 .topbar { align-items: center; background: #111724; border-bottom: 1px solid #20283a; display: flex; height: 72px; justify-content: space-between; padding: 0 42px; }
 .search-box { align-items: center; background: #181f2e; border: 1px solid #273147; border-radius: 8px; color: #9da6b6; display: flex; gap: 9px; padding: 9px 13px; width: 275px; }.search-box input { background: transparent; border: 0; color: #eef0f6; outline: 0; width: 100%; }.search-box input::placeholder { color: #7f8a9f; }
 .topbar-actions { align-items: center; color: #9099ab; display: flex; gap: 25px; }.topbar-date { font-size: 11px; }.icon-button { background: transparent; color: #6c778b; font-size: 22px; position: relative; }.icon-button i { background: #f16b79; border: 2px solid white; border-radius: 50%; height: 7px; position: absolute; right: 0; top: 0; width: 7px; }
