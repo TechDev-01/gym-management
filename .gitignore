@@ -2,3 +2,4 @@
 opts.txt
 node_modules/
 dist/
+apps/*/dist/
