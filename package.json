@@ -11,6 +11,11 @@
     "dev:web": "npm run dev --workspace @gym-management/web",
     "lint": "npm run lint --workspace @gym-management/api",
     "test": "npm test --workspace @gym-management/api",
-    "typecheck": "npm run typecheck --workspace @gym-management/api && npm run typecheck --workspace @gym-management/web"
+    "typecheck": "npm run typecheck --workspace @gym-management/api && npm run typecheck --workspace @gym-management/web",
+    "openapi:generate": "node --import tsx scripts/generate-openapi-types.ts",
+    "openapi:check": "npm run openapi:generate && git diff --exit-code -- apps/web/src/types/generated/api.ts"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.13.0"
   }
 }

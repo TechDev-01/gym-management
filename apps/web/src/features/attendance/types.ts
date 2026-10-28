@@ -1,18 +1,8 @@
-export interface AttendanceRecord {
-  id: number
-  clientId: number
-  subscriptionId: number
-  checkInAt: string
-  checkOutAt: string | null
-  recordedById: number | null
-}
+import type { components } from '../../types/generated/api'
 
-export interface AttendancePage {
-  items: AttendanceRecord[]
-  page: number
-  limit: number
-  total: number
-}
+export type AttendanceRecord = components['schemas']['AttendanceResponse']
+
+export type AttendancePage = components['schemas']['AttendancePageResponse']
 
 export interface AttendanceFilters {
   clientId?: number

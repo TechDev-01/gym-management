@@ -64,6 +64,16 @@ npm run lint
 npm test
 ```
 
+Los contratos HTTP consumidos por el frontend se documentan en
+`apps/api/src/docs/openapi.ts` y sus tipos generados/versionados en
+`apps/web/src/types/generated/api.ts`. Para regenerarlos y comprobar que están
+actualizados:
+
+```bash
+npm run openapi:generate
+npm run openapi:check
+```
+
 ## Stripe y jobs
 
 El webhook debe reenviarse a

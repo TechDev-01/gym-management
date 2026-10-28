@@ -1,5 +1,6 @@
 import type { Client } from '../clients/types'
 import type { Coach } from '../coaches/types'
+import type { components } from '../../types/generated/api'
 
 export const muscleGroups = [
   'CHEST',
@@ -21,92 +22,29 @@ export type MuscleGroup = (typeof muscleGroups)[number]
 export type RoutineLevel = (typeof routineLevels)[number]
 export type AssignmentStatus = (typeof assignmentStatuses)[number]
 
-export interface Exercise {
-  id: number
-  name: string
-  muscleGroup: MuscleGroup
-  equipment: string | null
-  description: string | null
-}
+export type Exercise = components['schemas']['ExerciseResponse']
 
-export interface RoutineExercise {
-  id: number
-  routineId: number
-  exerciseId: number
-  dayNumber: number
-  position: number
-  sets: number
-  reps: number
-  weightKg: string | null
-  restSeconds: number | null
-  notes: string | null
-  exercise?: Exercise
-}
+export type RoutineExercise = components['schemas']['RoutineExerciseResponse']
 
-export interface Routine {
-  id: number
-  name: string
-  description: string | null
-  level: RoutineLevel
-  createdById: number
-  isActive: boolean
-  createdAt: string
-  creator?: Coach
-  exercises?: RoutineExercise[]
-}
+export type Routine = components['schemas']['RoutineResponse'] & { creator?: Coach }
 
-export interface ClientRoutine {
-  id: number
-  clientId: number
-  routineId: number
-  assignedById: number
-  status: AssignmentStatus
-  startDate: string
-  endDate: string | null
-  notes: string | null
+export type ClientRoutine = components['schemas']['AssignmentResponse'] & {
   client?: Client
   routine?: Routine
   assignedBy?: Coach
 }
 
-export interface ExerciseInput {
-  name: string
-  muscleGroup: MuscleGroup
-  equipment?: string | null
-  description?: string | null
-}
+export type ExerciseInput = components['schemas']['CreateExerciseRequest']
 
-export type ExerciseUpdateInput = Partial<ExerciseInput>
+export type ExerciseUpdateInput = components['schemas']['UpdateExerciseRequest']
 
-export interface RoutineExerciseInput {
-  exerciseId: number
-  dayNumber: number
-  position: number
-  sets: number
-  reps: number
-  weightKg?: number | null
-  restSeconds?: number | null
-  notes?: string | null
-}
+export type RoutineExerciseInput = components['schemas']['CreateRoutineExerciseRequest']
 
-export interface RoutineInput {
-  name: string
-  description?: string | null
-  level: RoutineLevel
-  createdById?: number
-  exercises?: RoutineExerciseInput[]
-}
+export type RoutineInput = components['schemas']['CreateRoutineRequest']
 
-export type RoutineUpdateInput = Partial<Omit<RoutineInput, 'exercises'>>
+export type RoutineUpdateInput = components['schemas']['UpdateRoutineRequest']
 
-export interface AssignmentInput {
-  clientId?: number
-  routineId: number
-  assignedById?: number
-  startDate: string
-  endDate?: string | null
-  notes?: string | null
-}
+export type AssignmentInput = components['schemas']['CreateAssignmentRequest']
 
 export interface RoutineFilters {
   includeInactive?: boolean

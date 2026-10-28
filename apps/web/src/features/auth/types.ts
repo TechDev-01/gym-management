@@ -1,4 +1,5 @@
 import type { UserRole } from '../../types/navigation'
+import type { components } from '../../types/generated/api'
 
 export const userRoles = ['ADMIN', 'RECEPTION', 'COACH', 'CLIENT'] as const
 
@@ -10,16 +11,7 @@ export interface AuthUser {
   coachId: number | null
 }
 
-export interface LoginResponse {
-  accessToken: string
-  user: {
-    id: string
-    email: string
-    role: string
-    clientId: number | null
-    coachId: number | null
-  }
-}
+export type LoginResponse = components['schemas']['AuthResponse']
 
 export interface AuthSession {
   accessToken: string

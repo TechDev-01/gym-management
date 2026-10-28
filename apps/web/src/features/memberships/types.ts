@@ -1,56 +1,19 @@
 import type { PaymentMethod } from '../payments/types'
+import type { components } from '../../types/generated/api'
 
-export type SubscriptionStatus = 'PENDING' | 'ACTIVE' | 'EXPIRED' | 'CANCELLED'
+export type SubscriptionStatus = components['schemas']['SubscriptionStatus']
 
-export interface Membership {
-  id: number
-  name: string
-  description: string | null
-  durationDays: number
-  maxDaysPerWeek: number | null
-  priceAmount: number
-  currency: string
-  isActive: boolean
-  stripePriceId: string | null
-}
+export type Membership = components['schemas']['MembershipResponse']
 
-export interface MembershipInput {
-  name: string
-  description: string | null
-  durationDays: number
-  maxDaysPerWeek: number | null
-  priceAmount: number
-  currency: string
-  stripePriceId: string | null
-}
+export type MembershipInput = components['schemas']['CreateMembershipRequest']
 
-export interface MembershipUpdateInput {
-  name?: string
-  description?: string | null
-  durationDays?: number
-  maxDaysPerWeek?: number | null
-  priceAmount?: number
-}
+export type MembershipUpdateInput = components['schemas']['UpdateMembershipRequest']
 
-export interface Subscription {
-  id: number
-  clientId: number
-  membershipId: number
-  status: SubscriptionStatus
-  startDate: string | null
-  endDate: string | null
-  createdAt: string
-}
+export type Subscription = components['schemas']['SubscriptionResponse']
 
-export interface SubscriptionWithCheckout extends Subscription {
-  checkoutUrl: string | null
-}
+export type SubscriptionWithCheckout = components['schemas']['SubscriptionWithCheckoutResponse']
 
-export interface CreateSubscriptionInput {
-  clientId: number
-  membershipId: number
-  method: PaymentMethod
-}
+export type CreateSubscriptionInput = components['schemas']['CreateSubscriptionRequest']
 
 export interface SubscriptionFilters {
   clientId?: number

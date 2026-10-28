@@ -18,25 +18,5 @@ export interface CoachUsage {
   progressRecords: number
 }
 
-export interface DashboardStats {
-  period: {
-    from: string
-    to: string
-  }
-  clients: {
-    active: number
-  }
-  memberships: {
-    active: number
-    expired: number
-  }
-  revenue: {
-    amount: number
-    currency: string | null
-  }
-  attendance: {
-    total: number
-  }
-  payments: PaymentStatusCount[]
-  coachUsage: CoachUsage[]
-}
+export type DashboardStats = components['schemas']['DashboardStatsResponse']
+import type { components } from '../../types/generated/api'

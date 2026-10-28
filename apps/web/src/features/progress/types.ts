@@ -1,26 +1,8 @@
-export interface ProgressRecord {
-  id: number
-  clientId: number
-  recordedById: number | null
-  measuredAt: string
-  weightKg: number | null
-  heightCm: number | null
-  bodyFatPct: number | null
-  muscleKg: number | null
-  chestCm: number | null
-  waistCm: number | null
-  hipCm: number | null
-  armCm: number | null
-  thighCm: number | null
-  notes: string | null
-}
+import type { components } from '../../types/generated/api'
 
-export interface ProgressPage {
-  items: ProgressRecord[]
-  page: number
-  limit: number
-  total: number
-}
+export type ProgressRecord = components['schemas']['ProgressResponse']
+
+export type ProgressPage = components['schemas']['ProgressPageResponse']
 
 export interface ProgressFilters {
   clientId?: number
@@ -30,20 +12,7 @@ export interface ProgressFilters {
   limit?: number
 }
 
-export interface ProgressInput {
-  clientId?: number
-  measuredAt: string
-  weightKg?: number | null
-  heightCm?: number | null
-  bodyFatPct?: number | null
-  muscleKg?: number | null
-  chestCm?: number | null
-  waistCm?: number | null
-  hipCm?: number | null
-  armCm?: number | null
-  thighCm?: number | null
-  notes?: string | null
-}
+export type ProgressInput = components['schemas']['CreateProgressRequest']
 
 export type ProgressMetricKey =
   | 'weightKg'

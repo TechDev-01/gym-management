@@ -1,27 +1,7 @@
-export interface Client {
-  id: number
-  email: string
-  dni: string
-  name: string
-  lastName: string
-  phone: string
-  isActive: boolean
-  createdAt: string
-}
+import type { components } from '../../types/generated/api'
 
-export interface ClientInput {
-  email: string
-  password?: string
-  dni: string
-  name: string
-  lastName: string
-  phone: string
-}
+export type Client = components['schemas']['ClientResponse']
 
-export interface ClientUpdateInput {
-  email?: string
-  dni?: string
-  name?: string
-  lastName?: string
-  phone?: string
-}
+export type ClientInput = components['schemas']['CreateClientRequest']
+
+export type ClientUpdateInput = components['schemas']['UpdateClientRequest']

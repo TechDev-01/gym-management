@@ -1,19 +1,10 @@
 import type { DashboardFilters, DashboardStats } from '../dashboard/types'
+import type { components } from '../../types/generated/api'
 
 export type StatsFilters = DashboardFilters
 export type StatsData = DashboardStats
-export type ReportStatus = 'pending' | 'completed' | 'failed'
+export type ReportStatus = components['schemas']['ReportStatusResponse']['status']
 
-export interface ReportRequestResponse {
-  jobId: string
-}
+export type ReportRequestResponse = components['schemas']['ReportRequestResponse']
 
-export interface ReportStatusResponse {
-  jobId: string
-  reportType: string
-  status: ReportStatus
-  requestedAt: string | null
-  finishedAt: string | null
-  result: StatsData | null
-  error: string | null
-}
+export type ReportStatusResponse = components['schemas']['ReportStatusResponse']

@@ -1,21 +1,10 @@
-export type PaymentMethod = 'CARD' | 'CASH' | 'TRANSFER'
+import type { components } from '../../types/generated/api'
 
-export type PaymentStatus = 'PENDING' | 'SUCCEEDED' | 'FAILED' | 'REFUNDED'
+export type PaymentMethod = components['schemas']['PaymentMethod']
 
-export interface Payment {
-  id: number
-  clientId: number
-  subscriptionId: number
-  method: PaymentMethod
-  status: PaymentStatus
-  amount: number
-  currency: string
-  refundedAmount: number
-  receiptUrl: string | null
-  recordedById: number | null
-  paidAt: string | null
-  createdAt: string
-}
+export type PaymentStatus = components['schemas']['PaymentResponse']['status']
+
+export type Payment = components['schemas']['PaymentResponse']
 
 export interface PaymentFilters {
   clientId?: number

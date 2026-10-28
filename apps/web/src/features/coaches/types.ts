@@ -1,31 +1,9 @@
-export interface Coach {
-  id: number
-  email: string
-  dni: string
-  name: string
-  lastName: string
-  phone: string
-  isActive: boolean
-}
+import type { components } from '../../types/generated/api'
 
-export interface CoachInput {
-  email: string
-  dni: string
-  name: string
-  lastName: string
-  phone: string
-}
+export type Coach = components['schemas']['CoachResponse']
 
-export interface CoachSchedule {
-  id: number
-  coachId: number
-  dayOfWeek: number
-  startTime: string
-  endTime: string
-}
+export type CoachInput = components['schemas']['CreateCoachRequest']
 
-export interface CoachScheduleInput {
-  dayOfWeek: number
-  startTime: string
-  endTime: string
-}
+export type CoachSchedule = components['schemas']['CoachScheduleResponse']
+
+export type CoachScheduleInput = components['schemas']['CreateCoachScheduleRequest']
