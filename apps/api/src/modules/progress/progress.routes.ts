@@ -8,17 +8,22 @@ import { ProgressController } from './progress.controller.js'
 import { TypeOrmProgressRepository } from './progress.repository.js'
 import { ProgressService } from './progress.service.js'
 
-export function createProgressRouter(): Router {
+export function createProgressRouter(service?: ProgressService): Router {
   const router = Router()
-  const repository = new TypeOrmProgressRepository(
-    AppDataSource.getRepository(ProgressRecord),
-    AppDataSource.getRepository(Client),
-  )
-  const controller = new ProgressController(new ProgressService(repository))
+  const controller = new ProgressController(service ?? createProgressService())
 
   router.use(authenticate())
   router.get('/', controller.list)
   router.get('/:id', controller.get)
-  router.post('/', requireRole('ADMIN', 'COACH'), controller.create)
+  router.post('/', requireRole('ADMIN', 'COACH', 'CLIENT'), controller.create)
   return router
+}
+
+function createProgressService(): ProgressService {
+  return new ProgressService(
+    new TypeOrmProgressRepository(
+      AppDataSource.getRepository(ProgressRecord),
+      AppDataSource.getRepository(Client),
+    ),
+  )
 }

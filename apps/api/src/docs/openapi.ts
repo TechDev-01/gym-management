@@ -220,7 +220,7 @@ export const openapiDocument = {
     },
     '/progress': {
       get: { tags: ['Progress'], summary: 'List progress records', ...secured(), responses: success('ProgressPageResponse') },
-      post: { tags: ['Progress'], summary: 'Create a progress record', ...secured(['ADMIN', 'COACH']), requestBody: jsonBody('GenericObject'), responses: success('GenericResponse', '201') },
+      post: { tags: ['Progress'], summary: 'Create a progress record', ...secured(['ADMIN', 'COACH', 'CLIENT']), requestBody: jsonBody('GenericObject'), responses: success('GenericResponse', '201') },
     },
     '/progress/{id}': {
       parameters: [idParameter],

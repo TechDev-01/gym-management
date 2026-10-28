@@ -9,8 +9,11 @@ import {
   membershipManageRoles,
   membershipViewRoles,
   paymentViewRoles,
+  progressViewRoles,
   ProtectedRoute,
   RoleGuard,
+  routineManageRoles,
+  routineViewRoles,
   subscriptionCreateRoles,
   subscriptionViewRoles,
 } from '../features/auth'
@@ -26,6 +29,14 @@ import {
   SubscriptionsPage,
 } from '../features/memberships'
 import { PaymentsPage } from '../features/payments'
+import { ProgressPage } from '../features/progress'
+import {
+  AssignmentsPage,
+  ExercisesPage,
+  RoutineDetailPage,
+  RoutineFormPage,
+  RoutinesPage,
+} from '../features/routines'
 
 function NotFoundPage() {
   return (
@@ -81,6 +92,19 @@ export function AppRouter() {
         </Route>
         <Route element={<RoleGuard roles={attendanceViewRoles} />}>
           <Route path="/attendance" element={<AttendancePage />} />
+        </Route>
+        <Route element={<RoleGuard roles={routineManageRoles} />}>
+          <Route path="/routines/new" element={<RoutineFormPage />} />
+          <Route path="/routines/exercises" element={<ExercisesPage />} />
+          <Route path="/routines/assignments" element={<AssignmentsPage />} />
+          <Route path="/routines/:id/edit" element={<RoutineFormPage editing />} />
+        </Route>
+        <Route element={<RoleGuard roles={routineViewRoles} />}>
+          <Route path="/routines" element={<RoutinesPage />} />
+          <Route path="/routines/:id" element={<RoutineDetailPage />} />
+        </Route>
+        <Route element={<RoleGuard roles={progressViewRoles} />}>
+          <Route path="/progress" element={<ProgressPage />} />
         </Route>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
       </Route>

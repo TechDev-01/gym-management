@@ -13,6 +13,11 @@ export const subscriptionManageRoles: UserRole[] = ['ADMIN', 'RECEPTION']
 export const paymentViewRoles: UserRole[] = ['ADMIN', 'RECEPTION']
 export const attendanceViewRoles: UserRole[] = ['ADMIN', 'RECEPTION', 'CLIENT']
 export const attendanceManageRoles: UserRole[] = ['ADMIN', 'RECEPTION']
+export const routineViewRoles: UserRole[] = ['ADMIN', 'COACH', 'CLIENT']
+export const routineManageRoles: UserRole[] = ['ADMIN', 'COACH']
+export const routineAssignRoles: UserRole[] = ['ADMIN', 'COACH']
+export const progressViewRoles: UserRole[] = ['ADMIN', 'COACH', 'CLIENT']
+export const progressManageRoles: UserRole[] = ['ADMIN', 'COACH', 'CLIENT']
 
 export function canViewClients(role: UserRole | undefined): boolean {
   return role !== undefined && clientViewRoles.includes(role)
@@ -76,4 +81,24 @@ export function canViewClientAttendance(role: UserRole | undefined): boolean {
 
 export function canViewClientProgress(role: UserRole | undefined): boolean {
   return role === 'ADMIN' || role === 'RECEPTION' || role === 'COACH'
+}
+
+export function canViewRoutines(role: UserRole | undefined): boolean {
+  return role !== undefined && routineViewRoles.includes(role)
+}
+
+export function canManageRoutines(role: UserRole | undefined): boolean {
+  return role !== undefined && routineManageRoles.includes(role)
+}
+
+export function canAssignRoutines(role: UserRole | undefined): boolean {
+  return role !== undefined && routineAssignRoles.includes(role)
+}
+
+export function canViewProgress(role: UserRole | undefined): boolean {
+  return role !== undefined && progressViewRoles.includes(role)
+}
+
+export function canManageProgress(role: UserRole | undefined): boolean {
+  return role !== undefined && progressManageRoles.includes(role)
 }

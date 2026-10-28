@@ -4,8 +4,8 @@ import type { CoachInput } from './types'
 
 export const coachesQueryKey = ['coaches'] as const
 
-export function useCoaches() {
-  return useQuery({ queryKey: coachesQueryKey, queryFn: getCoaches })
+export function useCoaches(enabled = true) {
+  return useQuery({ queryKey: coachesQueryKey, queryFn: getCoaches, enabled })
 }
 
 export function useCoach(id: number, enabled = true) {
