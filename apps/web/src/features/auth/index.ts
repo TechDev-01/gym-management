@@ -1,12 +1,16 @@
 export { AuthProvider, LoginPage, useAuth } from './hooks'
 export { ProtectedRoute, RoleGuard, canAccessRole } from './guards'
 export {
+  attendanceManageRoles,
+  attendanceViewRoles,
   canChangeMembershipStatus,
   canCreateSubscriptions,
+  canManageAttendance,
   canManageClients,
   canManageCoaches,
   canManageMemberships,
   canManageSubscriptions,
+  canViewAttendance,
   canViewClientAttendance,
   canViewClientMembership,
   canViewClientProgress,

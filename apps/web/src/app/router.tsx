@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import {
+  attendanceViewRoles,
   clientManageRoles,
   clientViewRoles,
   coachManageRoles,
@@ -13,6 +14,7 @@ import {
   subscriptionCreateRoles,
   subscriptionViewRoles,
 } from '../features/auth'
+import { AttendancePage } from '../features/attendance'
 import { ClientDetailPage, ClientFormPage, ClientsPage } from '../features/clients'
 import { CoachDetailPage, CoachFormPage, CoachesPage } from '../features/coaches'
 import { DashboardPage } from '../features/dashboard/pages/DashboardPage'
@@ -76,6 +78,9 @@ export function AppRouter() {
         </Route>
         <Route element={<RoleGuard roles={paymentViewRoles} />}>
           <Route path="/payments" element={<PaymentsPage />} />
+        </Route>
+        <Route element={<RoleGuard roles={attendanceViewRoles} />}>
+          <Route path="/attendance" element={<AttendancePage />} />
         </Route>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
       </Route>

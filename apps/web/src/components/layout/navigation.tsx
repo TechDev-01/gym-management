@@ -15,7 +15,7 @@ export const navigationSections: NavigationSection[] = [
       { label: 'Membresías', href: '/memberships', icon: navigationIcon('membership'), roles: ['ADMIN', 'RECEPTION', 'CLIENT'] },
       { label: 'Suscripciones', href: '/subscriptions', icon: navigationIcon('subscriptions'), roles: ['ADMIN', 'RECEPTION', 'CLIENT'] },
       { label: 'Pagos', href: '/payments', icon: navigationIcon('payment'), roles: ['ADMIN', 'RECEPTION'] },
-      { label: 'Asistencia', href: '/attendance', icon: navigationIcon('attendance'), roles: ['ADMIN', 'RECEPTION', 'COACH', 'CLIENT'] },
+      { label: 'Asistencia', href: '/attendance', icon: navigationIcon('attendance'), roles: ['ADMIN', 'RECEPTION', 'CLIENT'] },
       { label: 'Rutinas', href: '/routines', icon: navigationIcon('routine'), roles: ['ADMIN', 'COACH', 'CLIENT'] },
       { label: 'Estadísticas', href: '/stats', icon: navigationIcon('stats'), roles: ['ADMIN'] },
       { label: 'Progreso', href: '/progress', icon: navigationIcon('progress'), roles: ['ADMIN', 'COACH', 'CLIENT'] },

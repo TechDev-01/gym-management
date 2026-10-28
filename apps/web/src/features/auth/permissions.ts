@@ -11,6 +11,8 @@ export const subscriptionViewRoles: UserRole[] = ['ADMIN', 'RECEPTION', 'CLIENT'
 export const subscriptionCreateRoles: UserRole[] = ['ADMIN', 'RECEPTION', 'CLIENT']
 export const subscriptionManageRoles: UserRole[] = ['ADMIN', 'RECEPTION']
 export const paymentViewRoles: UserRole[] = ['ADMIN', 'RECEPTION']
+export const attendanceViewRoles: UserRole[] = ['ADMIN', 'RECEPTION', 'CLIENT']
+export const attendanceManageRoles: UserRole[] = ['ADMIN', 'RECEPTION']
 
 export function canViewClients(role: UserRole | undefined): boolean {
   return role !== undefined && clientViewRoles.includes(role)
@@ -58,6 +60,14 @@ export function canManageSubscriptions(role: UserRole | undefined): boolean {
 
 export function canViewPayments(role: UserRole | undefined): boolean {
   return role !== undefined && paymentViewRoles.includes(role)
+}
+
+export function canViewAttendance(role: UserRole | undefined): boolean {
+  return role !== undefined && attendanceViewRoles.includes(role)
+}
+
+export function canManageAttendance(role: UserRole | undefined): boolean {
+  return role !== undefined && attendanceManageRoles.includes(role)
 }
 
 export function canViewClientAttendance(role: UserRole | undefined): boolean {
