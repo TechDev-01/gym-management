@@ -46,11 +46,16 @@ export class StatsService {
   }
 
   async generateReport(job: ReportJob): Promise<DashboardStats> {
-    const input = reportRequestSchema.parse({
+    const request = reportRequestSchema.parse({
       reportType: job.payload.reportType,
       ...job.payload.filters,
     })
-    return this.dashboard(input)
+
+    return this.dashboard({
+      from: request.from,
+      to: request.to,
+      timezone: request.timezone,
+    })
   }
 
   private resolveFilters(input: { from?: string; to?: string; timezone?: string }): DashboardFilters {

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import type { ReportJob } from '../../src/jobs/queues.js'
 import { SubscriptionStatus } from '../../src/modules/memberships/subscription.entity.js'
 import type { StatsRepository } from '../../src/modules/stats/stats.repository.js'
 import { StatsService } from '../../src/modules/stats/stats.service.js'
@@ -48,4 +49,24 @@ test('dashboard aggregates all administrative metrics with explicit period filte
   assert.equal(result.coachUsage[0]?.routineAssignments, 9)
   assert.equal(receivedFrom?.toISOString(), '2026-10-01T00:00:00.000Z')
   assert.equal(receivedTo?.toISOString(), '2026-10-27T00:00:00.000Z')
+})
+
+test('report generation accepts the report type without leaking it into dashboard filters', async () => {
+  const job: ReportJob = {
+    type: 'admin-report',
+    payload: {
+      reportType: 'dashboard-summary',
+      requestedById: 1,
+      filters: {
+        from: '2026-10-01',
+        to: '2026-10-27',
+        timezone: 'UTC',
+      },
+    },
+  }
+
+  const result = await new StatsService(createRepository()).generateReport(job)
+
+  assert.deepEqual(result.period, { from: '2026-10-01', to: '2026-10-27' })
+  assert.equal(result.clients.active, 12)
 })
