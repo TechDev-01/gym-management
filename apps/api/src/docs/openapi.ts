@@ -95,25 +95,48 @@ export const openapiDocument = {
       get: {
         tags: ['Clients'],
         summary: 'List clients',
-        responses: success('ClientListResponse'),
+        ...secured(['ADMIN', 'RECEPTION', 'COACH']),
+        responses: {
+          ...success('ClientListResponse'),
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+        },
       },
       post: {
         tags: ['Clients'],
         summary: 'Create a client',
+        ...secured(['ADMIN', 'RECEPTION']),
         requestBody: jsonBody('CreateClientRequest'),
-        responses: { ...success('ClientResponse', '201'), '400': { $ref: '#/components/responses/BadRequest' } },
+        responses: {
+          ...success('ClientResponse', '201'),
+          '400': { $ref: '#/components/responses/BadRequest' },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+        },
       },
     },
     '/clients/{id}': {
       parameters: [idParameter],
-      get: { tags: ['Clients'], summary: 'Get a client', responses: success('ClientResponse') },
+      get: {
+        tags: ['Clients'],
+        summary: 'Get a client',
+        ...secured(['ADMIN', 'RECEPTION', 'COACH']),
+        responses: {
+          ...success('ClientResponse'),
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+        },
+      },
       patch: {
         tags: ['Clients'],
         summary: 'Update a client',
+        ...secured(['ADMIN', 'RECEPTION']),
         requestBody: jsonBody('UpdateClientRequest'),
         responses: {
           ...success('ClientResponse'),
           '400': { $ref: '#/components/responses/BadRequest' },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
           '404': { $ref: '#/components/responses/NotFound' },
         },
       },
@@ -122,22 +145,50 @@ export const openapiDocument = {
       get: { tags: ['Coaches'], summary: 'Check coaches module health', responses: success('ModuleHealthResponse') },
     },
     '/coaches': {
-      get: { tags: ['Coaches'], summary: 'List coaches', responses: success('CoachListResponse') },
+      get: {
+        tags: ['Coaches'],
+        summary: 'List coaches',
+        ...secured(['ADMIN', 'RECEPTION', 'COACH']),
+        responses: {
+          ...success('CoachListResponse'),
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+        },
+      },
       post: {
         tags: ['Coaches'],
         summary: 'Create a coach',
+        ...secured(['ADMIN', 'RECEPTION']),
         requestBody: jsonBody('CreateCoachRequest'),
-        responses: success('CoachResponse', '201'),
+        responses: {
+          ...success('CoachResponse', '201'),
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+        },
       },
     },
     '/coaches/{id}': {
       parameters: [idParameter],
-      get: { tags: ['Coaches'], summary: 'Get a coach', responses: success('CoachResponse') },
+      get: {
+        tags: ['Coaches'],
+        summary: 'Get a coach',
+        ...secured(['ADMIN', 'RECEPTION', 'COACH']),
+        responses: {
+          ...success('CoachResponse'),
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+        },
+      },
       patch: {
         tags: ['Coaches'],
         summary: 'Update a coach',
+        ...secured(['ADMIN', 'RECEPTION']),
         requestBody: jsonBody('UpdateCoachRequest'),
-        responses: success('CoachResponse'),
+        responses: {
+          ...success('CoachResponse'),
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+        },
       },
     },
     '/coaches/{coachId}/schedules': {

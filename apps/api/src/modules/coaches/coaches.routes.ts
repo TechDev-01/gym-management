@@ -25,8 +25,8 @@ export function createCoachesRouter(
   const managers = requireRole('ADMIN', 'RECEPTION')
 
   router.get('/health', coachesController.health)
-  router.post('/', coachesController.create)
-  router.get('/', coachesController.getCoaches)
+  router.post('/', authenticated, managers, coachesController.create)
+  router.get('/', authenticated, viewers, coachesController.getCoaches)
   router.get(
     '/:coachId/schedules',
     authenticated,
@@ -51,8 +51,8 @@ export function createCoachesRouter(
     managers,
     schedulesController.remove,
   )
-  router.get('/:id', coachesController.getCoach)
-  router.patch('/:id', coachesController.update)
+  router.get('/:id', authenticated, viewers, coachesController.getCoach)
+  router.patch('/:id', authenticated, managers, coachesController.update)
 
   return router
 }

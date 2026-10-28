@@ -13,10 +13,10 @@
   clientes HTTP o scripts.
 - La autorización se basa en roles y relaciones básicas. Un despliegue mayor podría
   añadir permisos por recurso, auditoría y rate limiting específico por operación.
-- Las rutas CRUD de `/clients` y `/coaches` todavía no aplican `authenticate` ni
-  `requireRole`. El frontend oculta acciones según el rol, pero la protección
-  definitiva debe añadirse en la API antes de un despliegue real. Las rutas de
-  horarios (`/coaches/:id/schedules`) sí exigen autenticación y rol.
+- Las rutas CRUD de `/clients` y `/coaches` exigen autenticación y roles. Las
+  consultas están disponibles para `ADMIN`, `RECEPTION` y `COACH`; las altas y
+  modificaciones están limitadas a `ADMIN` y `RECEPTION`. La autorización por
+  recurso y la auditoría detallada siguen siendo trabajo futuro.
 - Los reportes administrativos pueden ampliarse con almacenamiento de archivos,
   expiración de resultados y métricas de ejecución.
 - Una base local existente puede tener `membership.description` creada antes de que

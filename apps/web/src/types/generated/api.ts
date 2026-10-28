@@ -166,7 +166,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List clients */
+        /**
+         * List clients
+         * @description Requires one of these roles: ADMIN, RECEPTION, COACH
+         */
         get: {
             parameters: {
                 query?: never;
@@ -185,10 +188,15 @@ export interface paths {
                         "application/json": components["schemas"]["ClientListResponse"];
                     };
                 };
+                401: components["responses"]["Unauthorized"];
+                403: components["responses"]["Forbidden"];
             };
         };
         put?: never;
-        /** Create a client */
+        /**
+         * Create a client
+         * @description Requires one of these roles: ADMIN, RECEPTION
+         */
         post: {
             parameters: {
                 query?: never;
@@ -212,6 +220,8 @@ export interface paths {
                     };
                 };
                 400: components["responses"]["BadRequest"];
+                401: components["responses"]["Unauthorized"];
+                403: components["responses"]["Forbidden"];
             };
         };
         delete?: never;
@@ -229,7 +239,10 @@ export interface paths {
             };
             cookie?: never;
         };
-        /** Get a client */
+        /**
+         * Get a client
+         * @description Requires one of these roles: ADMIN, RECEPTION, COACH
+         */
         get: {
             parameters: {
                 query?: never;
@@ -250,6 +263,8 @@ export interface paths {
                         "application/json": components["schemas"]["ClientResponse"];
                     };
                 };
+                401: components["responses"]["Unauthorized"];
+                403: components["responses"]["Forbidden"];
             };
         };
         put?: never;
@@ -257,7 +272,10 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Update a client */
+        /**
+         * Update a client
+         * @description Requires one of these roles: ADMIN, RECEPTION
+         */
         patch: {
             parameters: {
                 query?: never;
@@ -283,6 +301,8 @@ export interface paths {
                     };
                 };
                 400: components["responses"]["BadRequest"];
+                401: components["responses"]["Unauthorized"];
+                403: components["responses"]["Forbidden"];
                 404: components["responses"]["NotFound"];
             };
         };
@@ -331,7 +351,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List coaches */
+        /**
+         * List coaches
+         * @description Requires one of these roles: ADMIN, RECEPTION, COACH
+         */
         get: {
             parameters: {
                 query?: never;
@@ -350,10 +373,15 @@ export interface paths {
                         "application/json": components["schemas"]["CoachListResponse"];
                     };
                 };
+                401: components["responses"]["Unauthorized"];
+                403: components["responses"]["Forbidden"];
             };
         };
         put?: never;
-        /** Create a coach */
+        /**
+         * Create a coach
+         * @description Requires one of these roles: ADMIN, RECEPTION
+         */
         post: {
             parameters: {
                 query?: never;
@@ -376,6 +404,8 @@ export interface paths {
                         "application/json": components["schemas"]["CoachResponse"];
                     };
                 };
+                401: components["responses"]["Unauthorized"];
+                403: components["responses"]["Forbidden"];
             };
         };
         delete?: never;
@@ -393,7 +423,10 @@ export interface paths {
             };
             cookie?: never;
         };
-        /** Get a coach */
+        /**
+         * Get a coach
+         * @description Requires one of these roles: ADMIN, RECEPTION, COACH
+         */
         get: {
             parameters: {
                 query?: never;
@@ -414,6 +447,8 @@ export interface paths {
                         "application/json": components["schemas"]["CoachResponse"];
                     };
                 };
+                401: components["responses"]["Unauthorized"];
+                403: components["responses"]["Forbidden"];
             };
         };
         put?: never;
@@ -421,7 +456,10 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Update a coach */
+        /**
+         * Update a coach
+         * @description Requires one of these roles: ADMIN, RECEPTION
+         */
         patch: {
             parameters: {
                 query?: never;
@@ -446,6 +484,8 @@ export interface paths {
                         "application/json": components["schemas"]["CoachResponse"];
                     };
                 };
+                401: components["responses"]["Unauthorized"];
+                403: components["responses"]["Forbidden"];
             };
         };
         trace?: never;

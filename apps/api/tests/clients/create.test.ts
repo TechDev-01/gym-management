@@ -1,10 +1,13 @@
 import assert from 'node:assert/strict'
 import express from 'express'
+import jwt from 'jsonwebtoken'
 import { test } from 'node:test'
 import { createClientsRouter } from '../../src/modules/clients/clients.routes.js'
 import type { ClientsRepository } from '../../src/modules/clients/clients.repository.js'
 import type { Client } from '../../src/modules/clients/client.entity.js'
 import { errorHandlerMiddleware } from '../../src/shared/middlewares/error-handler.middleware.js'
+
+const secret = 'test-secret-with-at-least-32-characters'
 
 const input = {
   email: 'ana@example.com',
@@ -40,6 +43,8 @@ async function request(
   repository: ClientsRepository,
   body: unknown,
 ): Promise<{ status: number; body: unknown }> {
+  const previousSecret = process.env.JWT_SECRET
+  process.env.JWT_SECRET = secret
   const app = createApp(repository)
   const server = app.listen(0)
   const address = server.address()
@@ -48,7 +53,15 @@ async function request(
   try {
     const response = await fetch(`http://127.0.0.1:${address.port}/clients`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: {
+        'content-type': 'application/json',
+        authorization: `Bearer ${jwt.sign({
+          sub: 'user-1',
+          role: 'ADMIN',
+          clientId: null,
+          coachId: null,
+        }, secret)}`,
+      },
       body: JSON.stringify(body),
     })
 
@@ -57,6 +70,8 @@ async function request(
     await new Promise<void>((resolve, reject) => {
       server.close((error) => (error ? reject(error) : resolve()))
     })
+    if (previousSecret === undefined) delete process.env.JWT_SECRET
+    else process.env.JWT_SECRET = previousSecret
   }
 }
 

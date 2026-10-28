@@ -1,10 +1,18 @@
 import assert from 'node:assert/strict'
 import express from 'express'
+import jwt from 'jsonwebtoken'
 import { test } from 'node:test'
 import { errorHandlerMiddleware } from '../../src/shared/middlewares/error-handler.middleware.js'
 import { createClientsRouter } from '../../src/modules/clients/clients.routes.js'
 import type { ClientsRepository } from '../../src/modules/clients/clients.repository.js'
 import type { Client } from '../../src/modules/clients/client.entity.js'
+
+const secret = 'test-secret-with-at-least-32-characters'
+type Role = 'ADMIN' | 'RECEPTION' | 'COACH' | 'CLIENT'
+
+function authorization(role: Role): string {
+  return `Bearer ${jwt.sign({ sub: 'user-1', role, clientId: null, coachId: null }, secret)}`
+}
 
 function createRepository(includeDuplicate = false): ClientsRepository {
   let clients: Client[] = [
@@ -51,7 +59,10 @@ async function request(
   path: string,
   init?: RequestInit,
   repository: ClientsRepository = createRepository(),
+  role: Role | null = 'ADMIN',
 ): Promise<Response> {
+  const previousSecret = process.env.JWT_SECRET
+  process.env.JWT_SECRET = secret
   const app = express()
   app.use(express.json())
   app.use('/clients', createClientsRouter(repository))
@@ -61,13 +72,33 @@ async function request(
   assert(address && typeof address === 'object')
 
   try {
-    return await fetch(`http://127.0.0.1:${address.port}${path}`, init)
+    const headers = new Headers(init?.headers)
+    if (role) headers.set('authorization', authorization(role))
+    return await fetch(`http://127.0.0.1:${address.port}${path}`, { ...init, headers })
   } finally {
     await new Promise<void>((resolve, reject) => {
       server.close((error) => (error ? reject(error) : resolve()))
     })
+    if (previousSecret === undefined) delete process.env.JWT_SECRET
+    else process.env.JWT_SECRET = previousSecret
   }
 }
+
+test('client routes require authentication', async () => {
+  const response = await request('/clients', undefined, createRepository(), null)
+
+  assert.equal(response.status, 401)
+})
+
+test('client mutations reject unauthorized roles', async () => {
+  const response = await request('/clients/1', {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ name: 'Beatriz' }),
+  }, createRepository(), 'COACH')
+
+  assert.equal(response.status, 403)
+})
 
 test('GET /clients returns an array of clients', async () => {
   const response = await request('/clients')

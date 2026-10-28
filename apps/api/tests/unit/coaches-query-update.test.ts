@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import express from 'express'
+import jwt from 'jsonwebtoken'
 import { test } from 'node:test'
 import { ZodError } from 'zod'
 import { CoachesService } from '../../src/modules/coaches/coaches.service.js'
@@ -7,6 +8,13 @@ import { createCoachesRouter } from '../../src/modules/coaches/coaches.routes.js
 import type { CoachesRepository } from '../../src/modules/coaches/coaches.repository.js'
 import type { Coach } from '../../src/modules/coaches/coach.entity.js'
 import { errorHandlerMiddleware } from '../../src/shared/middlewares/error-handler.middleware.js'
+
+const secret = 'test-secret-with-at-least-32-characters'
+type Role = 'ADMIN' | 'RECEPTION' | 'COACH' | 'CLIENT'
+
+function authorization(role: Role): string {
+  return `Bearer ${jwt.sign({ sub: 'user-1', role, clientId: null, coachId: null }, secret)}`
+}
 
 function coach(overrides: Partial<Coach> = {}): Coach {
   return {
@@ -89,7 +97,10 @@ async function request(
   path: string,
   init: RequestInit | undefined = undefined,
   coachesRepository: CoachesRepository = repository(),
+  role: Role | null = 'ADMIN',
 ): Promise<Response> {
+  const previousSecret = process.env.JWT_SECRET
+  process.env.JWT_SECRET = secret
   const app = express()
   app.use(express.json())
   app.use('/coaches', createCoachesRouter(coachesRepository))
@@ -99,13 +110,33 @@ async function request(
   assert(address && typeof address === 'object')
 
   try {
-    return await fetch(`http://127.0.0.1:${address.port}${path}`, init)
+    const headers = new Headers(init?.headers)
+    if (role) headers.set('authorization', authorization(role))
+    return await fetch(`http://127.0.0.1:${address.port}${path}`, { ...init, headers })
   } finally {
     await new Promise<void>((resolve, reject) => {
       server.close((error) => (error ? reject(error) : resolve()))
     })
+    if (previousSecret === undefined) delete process.env.JWT_SECRET
+    else process.env.JWT_SECRET = previousSecret
   }
 }
+
+test('coach routes require authentication', async () => {
+  const response = await request('/coaches', undefined, repository(), null)
+
+  assert.equal(response.status, 401)
+})
+
+test('coach mutations reject unauthorized roles', async () => {
+  const response = await request('/coaches/1', {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ name: 'Beatriz' }),
+  }, repository(), 'COACH')
+
+  assert.equal(response.status, 403)
+})
 
 test('GET /coaches returns 200 with the coaches', async () => {
   const response = await request('/coaches')
