@@ -147,3 +147,38 @@ test('rejects price changes after a subscription exists', async () => {
     { message: 'Pricing and duration cannot change after a subscription exists' },
   )
 })
+
+test('lists active subscriptions for staff without an undefined client filter', async () => {
+  let receivedFilters: unknown = null
+  const repository = createRepository({
+    listSubscriptions: async (filters) => {
+      receivedFilters = filters
+      return [createSubscription({ status: SubscriptionStatus.ACTIVE })]
+    },
+  })
+
+  const result = await new MembershipsService(repository).listSubscriptions(
+    { status: SubscriptionStatus.ACTIVE },
+    { role: 'ADMIN', clientId: null },
+  )
+
+  assert.deepEqual(receivedFilters, { status: SubscriptionStatus.ACTIVE })
+  assert.equal(result.length, 1)
+})
+
+test('restricts subscription listings to the client own record', async () => {
+  let receivedFilters: unknown = null
+  const repository = createRepository({
+    listSubscriptions: async (filters) => {
+      receivedFilters = filters
+      return [createSubscription({ status: SubscriptionStatus.ACTIVE })]
+    },
+  })
+
+  await new MembershipsService(repository).listSubscriptions(
+    {},
+    { role: 'CLIENT', clientId: 7 },
+  )
+
+  assert.deepEqual(receivedFilters, { clientId: 7 })
+})

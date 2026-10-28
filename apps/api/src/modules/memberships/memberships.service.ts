@@ -12,6 +12,7 @@ import type { MembershipsRepository } from './memberships.repository.js'
 import type {
   MembershipResponse,
   PaymentGateway,
+  SubscriptionFilters,
   SubscriptionResponse,
   UpdateMembershipInput,
 } from './types.js'
@@ -153,7 +154,17 @@ export class MembershipsService {
 
   async listSubscriptions(filters: { clientId?: number; status?: SubscriptionStatus }, user: { role: string; clientId: number | null }): Promise<SubscriptionResponse[]> {
     const clientId = user.role === 'CLIENT' ? user.clientId ?? -1 : filters.clientId
-    return (await this.repository.listSubscriptions({ ...filters, clientId })).map(toSubscriptionResponse)
+    const normalizedFilters: SubscriptionFilters = {}
+
+    if (clientId !== undefined) {
+      normalizedFilters.clientId = clientId
+    }
+
+    if (filters.status !== undefined) {
+      normalizedFilters.status = filters.status
+    }
+
+    return (await this.repository.listSubscriptions(normalizedFilters)).map(toSubscriptionResponse)
   }
 
   async getSubscription(id: number, user: { role: string; clientId: number | null }): Promise<SubscriptionResponse> {
