@@ -28,3 +28,23 @@ export interface UpdateCoachInput {
   lastName?: string
   phone?: string
 }
+
+export interface CoachScheduleResponse {
+  id: number
+  coachId: number
+  dayOfWeek: number
+  startTime: string
+  endTime: string
+}
+
+export interface CreateCoachScheduleInput {
+  dayOfWeek: number
+  startTime: string
+  endTime: string
+}
+
+export interface UpdateCoachScheduleInput {
+  dayOfWeek?: number
+  startTime?: string
+  endTime?: string
+}

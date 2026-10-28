@@ -15,3 +15,17 @@ export interface CoachInput {
   lastName: string
   phone: string
 }
+
+export interface CoachSchedule {
+  id: number
+  coachId: number
+  dayOfWeek: number
+  startTime: string
+  endTime: string
+}
+
+export interface CoachScheduleInput {
+  dayOfWeek: number
+  startTime: string
+  endTime: string
+}

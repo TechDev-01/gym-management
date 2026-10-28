@@ -26,3 +26,30 @@ export const updateCoachSchema = z
   .refine((input) => Object.keys(input).length > 0, {
     message: 'At least one field is required',
   })
+
+export const coachScheduleIdSchema = z.coerce.number().int().positive()
+
+const scheduleTimeSchema = z
+  .string()
+  .regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Time must use HH:mm format')
+
+export const createCoachScheduleSchema = z
+  .object({
+    dayOfWeek: z.coerce.number().int().min(1).max(7),
+    startTime: scheduleTimeSchema,
+    endTime: scheduleTimeSchema,
+  })
+  .refine((input) => input.startTime < input.endTime, {
+    message: 'startTime must be earlier than endTime',
+    path: ['endTime'],
+  })
+
+export const updateCoachScheduleSchema = z
+  .object({
+    dayOfWeek: z.coerce.number().int().min(1).max(7).optional(),
+    startTime: scheduleTimeSchema.optional(),
+    endTime: scheduleTimeSchema.optional(),
+  })
+  .refine((input) => Object.keys(input).length > 0, {
+    message: 'At least one field is required',
+  })

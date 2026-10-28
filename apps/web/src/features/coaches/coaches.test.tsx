@@ -43,6 +43,16 @@ const coaches = [
   },
 ]
 
+const schedules = [
+  {
+    id: 1,
+    coachId: 1,
+    dayOfWeek: 1,
+    startTime: '08:00',
+    endTime: '16:00',
+  },
+]
+
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -61,6 +71,34 @@ function mockApi(
 }
 
 function coachesHandler(url: string, init?: RequestInit): Response {
+  if (/\/coaches\/\d+\/schedules\/\d+$/.test(url)) {
+    if (init?.method === 'PATCH') {
+      return json({
+        ...schedules[0],
+        ...(JSON.parse(String(init.body)) as Record<string, unknown>),
+      })
+    }
+
+    if (init?.method === 'DELETE') {
+      return new Response(null, { status: 204 })
+    }
+  }
+
+  if (/\/coaches\/\d+\/schedules$/.test(url)) {
+    if (init?.method === 'POST') {
+      return json(
+        {
+          ...schedules[0],
+          id: 2,
+          ...(JSON.parse(String(init.body)) as Record<string, unknown>),
+        },
+        201,
+      )
+    }
+
+    return json(schedules)
+  }
+
   if (/\/coaches\/\d+$/.test(url)) {
     return json(coaches[0])
   }
@@ -214,12 +252,82 @@ describe('coaches module', () => {
     })
   })
 
-  it('shows the detail with explicit placeholders for phase 9 relations', async () => {
+  it('shows the coach detail with weekly schedules and the phase 9 placeholder', async () => {
     mockApi(coachesHandler)
     renderCoachDetail()
 
     expect(await screen.findByRole('heading', { name: 'Carlos Ruiz' })).toBeInTheDocument()
-    expect(screen.getByText(/La API actual aún no expone operaciones de horarios/i)).toBeInTheDocument()
+    expect(await screen.findByText('Lunes')).toBeInTheDocument()
+    expect(screen.getByText('08:00')).toBeInTheDocument()
+    expect(screen.getByText('16:00')).toBeInTheDocument()
     expect(screen.getByText(/se incorporarán en la Fase 9/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Agregar horario' })).toBeInTheDocument()
+  })
+
+  it('shows schedules as read only for coaches', async () => {
+    mockApi(coachesHandler)
+    renderCoachDetail('COACH')
+
+    expect(await screen.findByText('Lunes')).toBeInTheDocument()
+    expect(screen.getByText('Solo lectura')).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Agregar horario' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('adds a schedule from the coach detail', async () => {
+    const fetchMock = mockApi(coachesHandler)
+    renderCoachDetail()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Agregar horario' }))
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Día' }))
+    fireEvent.click(screen.getByRole('option', { name: 'Martes' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar horario' }))
+
+    expect(
+      await screen.findByText('Horario agregado correctamente.'),
+    ).toBeInTheDocument()
+
+    const postCall = fetchMock.mock.calls.find(
+      ([input, init]) =>
+        String(input).endsWith('/coaches/1/schedules') &&
+        (init as RequestInit | undefined)?.method === 'POST',
+    )
+
+    expect(postCall).toBeDefined()
+    const body = JSON.parse(String((postCall?.[1] as RequestInit).body)) as Record<
+      string,
+      unknown
+    >
+    expect(body).toMatchObject({
+      dayOfWeek: 2,
+      startTime: '08:00',
+      endTime: '16:00',
+    })
+  })
+
+  it('deletes a schedule after confirmation', async () => {
+    const fetchMock = mockApi(coachesHandler)
+    renderCoachDetail()
+
+    fireEvent.click(
+      await screen.findByRole('button', {
+        name: 'Eliminar horario del Lunes',
+      }),
+    )
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Eliminar horario' }),
+    )
+
+    expect(
+      await screen.findByText('Horario eliminado correctamente.'),
+    ).toBeInTheDocument()
+    expect(
+      fetchMock.mock.calls.some(
+        ([input, init]) =>
+          String(input).endsWith('/coaches/1/schedules/1') &&
+          (init as RequestInit | undefined)?.method === 'DELETE',
+      ),
+    ).toBe(true)
   })
 })

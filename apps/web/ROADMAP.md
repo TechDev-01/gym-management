@@ -213,7 +213,8 @@ Dependencia: Fases 3 y 4.
 
 - Listado y detalle.
 - Alta y edición.
-- Horarios del entrenador cuando estén disponibles en la API.
+- Horarios del entrenador (disponibilidad semanal mediante
+  `GET/POST/PATCH/DELETE /coaches/:id/schedules`).
 - Relación con rutinas y clientes asignados.
 
 **Criterio de terminado:**

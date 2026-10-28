@@ -133,6 +133,82 @@ export const openapiDocument = {
         responses: success('GenericResponse'),
       },
     },
+    '/coaches/{coachId}/schedules': {
+      parameters: [
+        {
+          name: 'coachId',
+          in: 'path',
+          required: true,
+          schema: { type: 'integer', minimum: 1 },
+        },
+      ],
+      get: {
+        tags: ['Coaches'],
+        summary: 'List the weekly schedule of a coach',
+        ...secured(['ADMIN', 'RECEPTION', 'COACH']),
+        responses: {
+          ...success('CoachScheduleListResponse'),
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+          '404': { $ref: '#/components/responses/NotFound' },
+        },
+      },
+      post: {
+        tags: ['Coaches'],
+        summary: 'Add a weekly schedule slot for a coach',
+        ...secured(['ADMIN', 'RECEPTION']),
+        requestBody: jsonBody('CreateCoachScheduleRequest'),
+        responses: {
+          ...success('CoachScheduleResponse', '201'),
+          '400': { $ref: '#/components/responses/BadRequest' },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+          '404': { $ref: '#/components/responses/NotFound' },
+          '409': { $ref: '#/components/responses/Conflict' },
+        },
+      },
+    },
+    '/coaches/{coachId}/schedules/{scheduleId}': {
+      parameters: [
+        {
+          name: 'coachId',
+          in: 'path',
+          required: true,
+          schema: { type: 'integer', minimum: 1 },
+        },
+        {
+          name: 'scheduleId',
+          in: 'path',
+          required: true,
+          schema: { type: 'integer', minimum: 1 },
+        },
+      ],
+      patch: {
+        tags: ['Coaches'],
+        summary: 'Update a coach schedule slot',
+        ...secured(['ADMIN', 'RECEPTION']),
+        requestBody: jsonBody('UpdateCoachScheduleRequest'),
+        responses: {
+          ...success('CoachScheduleResponse'),
+          '400': { $ref: '#/components/responses/BadRequest' },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+          '404': { $ref: '#/components/responses/NotFound' },
+          '409': { $ref: '#/components/responses/Conflict' },
+        },
+      },
+      delete: {
+        tags: ['Coaches'],
+        summary: 'Delete a coach schedule slot',
+        ...secured(['ADMIN', 'RECEPTION']),
+        responses: {
+          '204': { description: 'Schedule slot deleted' },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+          '404': { $ref: '#/components/responses/NotFound' },
+        },
+      },
+    },
     '/memberships': {
       get: { tags: ['Memberships'], summary: 'List memberships', ...secured(['ADMIN', 'RECEPTION', 'CLIENT']), responses: success('GenericListResponse') },
       post: { tags: ['Memberships'], summary: 'Create a membership', ...secured(['ADMIN', 'RECEPTION']), requestBody: jsonBody('GenericObject'), responses: success('GenericResponse', '201') },
@@ -326,6 +402,41 @@ export const openapiDocument = {
         properties: { clientId: { type: 'integer', minimum: 1 } },
         additionalProperties: false,
       },
+      CoachScheduleResponse: {
+        type: 'object',
+        required: ['id', 'coachId', 'dayOfWeek', 'startTime', 'endTime'],
+        properties: {
+          id: { type: 'integer', minimum: 1 },
+          coachId: { type: 'integer', minimum: 1 },
+          dayOfWeek: { type: 'integer', minimum: 1, maximum: 7, description: '1 = Monday, 7 = Sunday' },
+          startTime: { type: 'string', pattern: '^([01]\\d|2[0-3]):[0-5]\\d$', example: '08:00' },
+          endTime: { type: 'string', pattern: '^([01]\\d|2[0-3]):[0-5]\\d$', example: '16:00' },
+        },
+      },
+      CoachScheduleListResponse: {
+        type: 'array',
+        items: { $ref: '#/components/schemas/CoachScheduleResponse' },
+      },
+      CreateCoachScheduleRequest: {
+        type: 'object',
+        required: ['dayOfWeek', 'startTime', 'endTime'],
+        properties: {
+          dayOfWeek: { type: 'integer', minimum: 1, maximum: 7 },
+          startTime: { type: 'string', pattern: '^([01]\\d|2[0-3]):[0-5]\\d$', example: '08:00' },
+          endTime: { type: 'string', pattern: '^([01]\\d|2[0-3]):[0-5]\\d$', example: '16:00' },
+        },
+        additionalProperties: false,
+      },
+      UpdateCoachScheduleRequest: {
+        type: 'object',
+        minProperties: 1,
+        properties: {
+          dayOfWeek: { type: 'integer', minimum: 1, maximum: 7 },
+          startTime: { type: 'string', pattern: '^([01]\\d|2[0-3]):[0-5]\\d$' },
+          endTime: { type: 'string', pattern: '^([01]\\d|2[0-3]):[0-5]\\d$' },
+        },
+        additionalProperties: false,
+      },
       ErrorResponse: { type: 'object', required: ['error'], properties: { error: { type: 'string' } } },
     },
     responses: {
@@ -333,6 +444,7 @@ export const openapiDocument = {
       Unauthorized: { description: 'Authentication required', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
       Forbidden: { description: 'Insufficient permissions', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
       NotFound: { description: 'Resource not found', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
+      Conflict: { description: 'Resource conflict', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
     },
   },
 } as const

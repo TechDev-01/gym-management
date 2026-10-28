@@ -239,7 +239,7 @@ rol, logout y un área principal para las páginas.
 | `auth` | Login, logout, sesión, guards y roles |
 | `dashboard` | Resumen operativo según el rol |
 | `clients` | Listado, detalle, creación y actualización de clientes |
-| `coaches` | Listado, detalle, creación y actualización de entrenadores |
+| `coaches` | Listado, detalle, creación, actualización y horarios semanales de entrenadores |
 | `memberships` | Catálogo de membresías y cambios de estado |
 | `attendance` | Check-in, check-out e historial |
 | `routines` | Ejercicios, rutinas y asignaciones |
