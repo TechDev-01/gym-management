@@ -10,7 +10,8 @@ export const navigationSections: NavigationSection[] = [
     label: 'Workspace',
     items: [
       { label: 'Dashboard', href: '/dashboard', icon: navigationIcon('dashboard'), roles: ['ADMIN', 'RECEPTION', 'COACH', 'CLIENT'] },
-      { label: 'Clientes', href: '/clients', icon: navigationIcon('clients'), roles: ['ADMIN', 'RECEPTION', 'COACH'], badge: '124' },
+      { label: 'Clientes', href: '/clients', icon: navigationIcon('clients'), roles: ['ADMIN', 'RECEPTION', 'COACH'] },
+      { label: 'Entrenadores', href: '/coaches', icon: navigationIcon('profile'), roles: ['ADMIN', 'RECEPTION', 'COACH'] },
       { label: 'Membresías', href: '/memberships', icon: navigationIcon('membership'), roles: ['ADMIN', 'RECEPTION'] },
       { label: 'Asistencia', href: '/attendance', icon: navigationIcon('attendance'), roles: ['ADMIN', 'RECEPTION', 'COACH', 'CLIENT'] },
       { label: 'Rutinas', href: '/routines', icon: navigationIcon('routine'), roles: ['ADMIN', 'COACH', 'CLIENT'] },

@@ -13,6 +13,8 @@ export type IconName =
   | 'users'
   | 'money'
   | 'check'
+  | 'add'
+  | 'search'
 
 interface IconProps extends Omit<SVGProps<SVGSVGElement>, 'name' | 'size'> {
   name: IconName
@@ -33,6 +35,8 @@ const paths: Record<IconName, string> = {
   users: 'M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM4 20v-1a4 4 0 0 1 4-4h1M15 11a3 3 0 1 0 0-6M15 15h1a4 4 0 0 1 4 4v1',
   money: 'M4 6h16v12H4zM8 12h.01M16 12h.01M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z',
   check: 'M5 12.5 9.5 17 19 7',
+  add: 'M12 5v14M5 12h14',
+  search: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14ZM20 20l-4-4',
 }
 
 export function Icon({ name, size = 20, strokeWidth = 1.8, ...props }: IconProps) {

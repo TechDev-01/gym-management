@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { AppProviders } from '../../app/providers'
-import { LoginPage, ProtectedRoute, useAuth } from './index'
+import { LoginPage, ProtectedRoute, RoleGuard, useAuth } from './index'
 import { authSessionStorageKey } from './storage'
 
 const loginResponse = {
@@ -83,6 +83,49 @@ describe('authentication flow', () => {
     )
 
     expect(await screen.findByText('Pantalla de login')).toBeInTheDocument()
+  })
+
+  it('guards nested routes by role', async () => {
+    sessionStorage.setItem(
+      authSessionStorageKey,
+      JSON.stringify({ accessToken: 'stored-token', user: { ...loginResponse.user, role: 'COACH' } }),
+    )
+
+    const view = renderWithAuth(
+      <Routes>
+        <Route element={<ProtectedRoute />}>
+          <Route element={<RoleGuard roles={['ADMIN']} />}>
+            <Route path="/admin" element={<p>Zona admin</p>} />
+          </Route>
+          <Route path="/dashboard" element={<p>Dashboard permitido</p>} />
+        </Route>
+        <Route path="/login" element={<p>Pantalla de login</p>} />
+      </Routes>,
+      ['/admin'],
+    )
+
+    expect(await screen.findByText('Dashboard permitido')).toBeInTheDocument()
+    view.unmount()
+
+    sessionStorage.setItem(
+      authSessionStorageKey,
+      JSON.stringify({ accessToken: 'stored-token', user: { ...loginResponse.user, role: 'ADMIN' } }),
+    )
+
+    renderWithAuth(
+      <Routes>
+        <Route element={<ProtectedRoute />}>
+          <Route element={<RoleGuard roles={['ADMIN']} />}>
+            <Route path="/admin" element={<p>Zona admin</p>} />
+          </Route>
+          <Route path="/dashboard" element={<p>Dashboard permitido</p>} />
+        </Route>
+        <Route path="/login" element={<p>Pantalla de login</p>} />
+      </Routes>,
+      ['/admin'],
+    )
+
+    expect(await screen.findByText('Zona admin')).toBeInTheDocument()
   })
 
   it('rejects an unsupported role from the API', async () => {

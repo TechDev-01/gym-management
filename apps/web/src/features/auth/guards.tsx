@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { LoadingState } from '../../components/feedback/States'
 import { useAuth } from './hooks'
@@ -18,14 +19,14 @@ export function ProtectedRoute() {
   return <Outlet />
 }
 
-export function RoleGuard({ roles, children }: { roles: UserRole[]; children: React.ReactNode }) {
+export function RoleGuard({ roles, children }: { roles: UserRole[]; children?: ReactNode }) {
   const { user } = useAuth()
 
   if (!user || !roles.includes(user.role)) {
     return <Navigate to="/dashboard" replace />
   }
 
-  return children
+  return <>{children ?? <Outlet />}</>
 }
 
 export function canAccessRole(userRole: UserRole, allowedRoles: UserRole[]): boolean {
