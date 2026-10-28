@@ -71,7 +71,6 @@ services:
   - type: web
     name: gym-management-web
     runtime: static
-    region: frankfurt
     buildCommand: npm ci && npm run build --workspace @gym-management/web
     staticPublishPath: apps/web/dist
     previews:
