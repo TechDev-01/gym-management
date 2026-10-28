@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
+import { LoginPage, ProtectedRoute } from '../features/auth'
 import { DashboardPage } from '../features/dashboard/pages/DashboardPage'
 
 function NotFoundPage() {
@@ -17,8 +18,11 @@ function NotFoundPage() {
 export function AppRouter() {
   return (
     <Routes>
-      <Route path="/dashboard" element={<DashboardPage />} />
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route element={<ProtectedRoute />}>
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   )

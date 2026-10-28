@@ -2,13 +2,15 @@ import { AppBar, Badge, Box, Drawer, IconButton, InputAdornment, TextField, Tool
 import { useState, type ReactNode } from 'react'
 import { Sidebar } from './Sidebar'
 import type { UserRole } from '../../types/navigation'
+import { useAuth } from '../../features/auth'
 
 interface AppShellProps {
   children: ReactNode
-  role?: UserRole
 }
 
-export function AppShell({ children, role = 'ADMIN' }: AppShellProps) {
+export function AppShell({ children }: AppShellProps) {
+  const { user } = useAuth()
+  const role: UserRole = user?.role ?? 'CLIENT'
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   return (

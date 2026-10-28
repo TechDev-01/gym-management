@@ -2,6 +2,7 @@ import { Avatar, Box, ButtonBase, Divider, List, ListItemButton, ListItemIcon, L
 import { Link, useLocation } from 'react-router-dom'
 import { getNavigationForRole } from './navigation'
 import type { UserRole } from '../../types/navigation'
+import { useAuth } from '../../features/auth'
 
 interface SidebarProps {
   role: UserRole
@@ -10,6 +11,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ role, variant, onNavigate }: SidebarProps) {
+  const { user, logout } = useAuth()
   const location = useLocation()
   const sections = getNavigationForRole(role)
 
@@ -66,13 +68,13 @@ export function Sidebar({ role, variant, onNavigate }: SidebarProps) {
           <Typography variant="caption" color="text.secondary">Consulta la documentación</Typography>
         </Stack>
         <Divider sx={{ borderColor: 'divider' }} />
-        <ButtonBase sx={{ width: '100%', justifyContent: 'flex-start', gap: 1.25, py: 1.25, textAlign: 'left' }}>
+        <ButtonBase onClick={logout} sx={{ width: '100%', justifyContent: 'flex-start', gap: 1.25, py: 1.25, textAlign: 'left' }}>
           <Avatar sx={{ width: 34, height: 34, fontSize: 10, bgcolor: 'primary.main' }}>AR</Avatar>
           <Box sx={{ flex: 1 }}>
-            <Typography variant="caption" sx={{ display: 'block', fontWeight: 600 }}>Alex Rivera</Typography>
-            <Typography variant="caption" color="text.secondary">Administrador</Typography>
+            <Typography variant="caption" sx={{ display: 'block', fontWeight: 600 }}>{user?.email ?? 'Usuario'}</Typography>
+            <Typography variant="caption" color="text.secondary">{role}</Typography>
           </Box>
-          <Typography sx={{ color: 'text.disabled' }}>•••</Typography>
+          <Typography sx={{ color: 'text.disabled' }} aria-label="Cerrar sesión">↪</Typography>
         </ButtonBase>
       </Box>
     </Box>

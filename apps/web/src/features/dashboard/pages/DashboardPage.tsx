@@ -6,6 +6,7 @@ import { KpiCard } from '../../../components/ui/KpiCard'
 import { Panel } from '../../../components/ui/Panel'
 import { StatusBadge } from '../../../components/ui/StatusBadge'
 import { Icon } from '../../../components/ui/Icon'
+import { useAuth } from '../../auth'
 
 const renewals = [
   ['CM', 'Carla Mendoza', 'Premium · vence en 2 días', '$89', 'primary'],
@@ -15,11 +16,13 @@ const renewals = [
 ] as const
 
 export function DashboardPage() {
+  const { user } = useAuth()
+
   return (
-    <AppShell role="ADMIN">
+    <AppShell>
       <PageHeader
         eyebrow="Resumen general"
-        title="Buenos días, Alex ✦"
+        title={`Buenos días, ${user?.email.split('@')[0] ?? 'usuario'} ✦`}
         subtitle="Aquí tienes lo que está pasando hoy en tu gimnasio."
         actions={<><Button variant="outlined">↓ Exportar</Button><Button variant="contained">+ Nuevo cliente</Button></>}
       />
