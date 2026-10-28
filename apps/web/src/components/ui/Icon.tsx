@@ -4,6 +4,8 @@ export type IconName =
   | 'dashboard'
   | 'clients'
   | 'membership'
+  | 'subscriptions'
+  | 'payment'
   | 'attendance'
   | 'routine'
   | 'stats'
@@ -26,6 +28,8 @@ const paths: Record<IconName, string> = {
   dashboard: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z',
   clients: 'M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20M10 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM17 11a2.5 2.5 0 1 0 0-5M16 15h1.5A3.5 3.5 0 0 1 21 18.5V20',
   membership: 'M12 3 20 7.5v9L12 21l-8-4.5v-9L12 3ZM4.5 7.8 12 12l7.5-4.2M12 12v9',
+  subscriptions: 'M5 7h14M5 12h14M5 17h9M4 4h16v16H4z',
+  payment: 'M4 7h16v10H4zM4 10h16M8 14h3',
   attendance: 'M7 3v4M17 3v4M4 9h16M6 5h12a2 2 0 0 1 2 2v12H4V7a2 2 0 0 1 2-2ZM8 13h3M8 17h3',
   routine: 'M6 4h12v16H6zM9 8h6M9 12h6M9 16h3',
   stats: 'M5 19V9M12 19V5M19 19V3',

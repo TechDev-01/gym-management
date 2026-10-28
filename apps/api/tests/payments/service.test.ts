@@ -3,7 +3,7 @@ import { test } from 'node:test'
 import type { NotificationService } from '../../src/jobs/services.js'
 import type { Membership } from '../../src/modules/memberships/membership.entity.js'
 import { SubscriptionStatus, type Subscription } from '../../src/modules/memberships/subscription.entity.js'
-import { PaymentStatus, type Payment } from '../../src/modules/payments/payment.entity.js'
+import { PaymentMethod, PaymentStatus, type Payment } from '../../src/modules/payments/payment.entity.js'
 import { PaymentsService, type PaymentsServiceRepository } from '../../src/modules/payments/payments.service.js'
 import type { StripeGateway } from '../../src/modules/payments/payment-gateway.js'
 import type { StripeEvent } from '../../src/modules/payments/stripe-event.entity.js'
@@ -21,6 +21,7 @@ function createPayment(overrides: Partial<Payment> = {}): Payment {
     id: 20,
     clientId: 7,
     subscriptionId: 10,
+    method: PaymentMethod.CASH,
     status: PaymentStatus.PENDING,
     amount: 1000,
     currency: 'usd',
@@ -56,6 +57,7 @@ function createRepository(overrides: Partial<PaymentsServiceRepository> = {}): P
       durationDays: 30,
     } as Membership),
     findById: async () => createPayment(),
+    listPayments: async () => [createPayment()],
     findByStripePaymentIntentId: async () => createPayment(),
     updatePayment: async () => {},
     activateSubscription: async () => {},
@@ -150,4 +152,34 @@ test('failed webhook is recorded and rethrown', async () => {
     { message: 'Stripe Checkout metadata is invalid' },
   )
   assert.equal(recordedError, 'Stripe Checkout metadata is invalid')
+})
+
+test('lists payments with filters and hides Stripe identifiers', async () => {
+  const receivedFilters: unknown[] = []
+  const repository = createRepository({
+    listPayments: async (filters) => {
+      receivedFilters.push(filters)
+      return [createPayment({ status: PaymentStatus.SUCCEEDED, paidAt: new Date('2026-10-28T10:00:00Z') })]
+    },
+  })
+  const service = new PaymentsService(repository, stripeGateway)
+
+  const payments = await service.listPayments({ status: 'SUCCEEDED', clientId: '7' })
+
+  assert.deepEqual(receivedFilters[0], { status: PaymentStatus.SUCCEEDED, clientId: 7 })
+  assert.equal(payments.length, 1)
+  assert.equal(payments[0]?.status, PaymentStatus.SUCCEEDED)
+  assert.equal(payments[0]?.method, PaymentMethod.CASH)
+  assert.equal('stripeCheckoutSessionId' in (payments[0] ?? {}), false)
+  assert.equal('stripePaymentIntentId' in (payments[0] ?? {}), false)
+})
+
+test('returns a payment by id and rejects missing payments', async () => {
+  const repository = createRepository({
+    findById: async (id) => (id === 20 ? createPayment() : null),
+  })
+  const service = new PaymentsService(repository, stripeGateway)
+
+  assert.equal((await service.getPayment(20)).id, 20)
+  await assert.rejects(() => service.getPayment(99), { message: 'Payment not found' })
 })

@@ -4,7 +4,9 @@
   los adaptadores externos de correo, mensajería y generación de archivos pueden
   sustituirse por implementaciones de producción.
 - Stripe se prueba con claves de prueba y requiere configurar un endpoint o Stripe
-  CLI para recibir webhooks localmente.
+  CLI para recibir webhooks localmente. El estado de los pagos con tarjeta se
+  actualiza de forma asíncrona; el detalle de suscripción permite refrescar el
+  estado manualmente y el frontend nunca maneja claves privadas.
 - El seed contiene credenciales conocidas para facilitar la evaluación académica; un
   entorno real debe usar secretos rotados y un mecanismo de administración segura.
 - No se incluye una interfaz web; la demostración se realiza mediante Swagger,

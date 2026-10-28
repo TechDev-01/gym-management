@@ -232,6 +232,13 @@ export const openapiDocument = {
     '/stats/reports': {
       post: { tags: ['Stats'], summary: 'Request an administrative report', ...secured(['ADMIN', 'RECEPTION']), requestBody: jsonBody('GenericObject'), responses: success('GenericResponse', '202') },
     },
+    '/payments': {
+      get: { tags: ['Payments'], summary: 'List payments', ...secured(['ADMIN', 'RECEPTION']), responses: success('GenericListResponse') },
+    },
+    '/payments/{id}': {
+      parameters: [idParameter],
+      get: { tags: ['Payments'], summary: 'Get a payment', ...secured(['ADMIN', 'RECEPTION']), responses: success('GenericResponse') },
+    },
     '/payments/webhook': {
       post: {
         tags: ['Payments'],

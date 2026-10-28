@@ -1,16 +1,30 @@
 export { AuthProvider, LoginPage, useAuth } from './hooks'
 export { ProtectedRoute, RoleGuard, canAccessRole } from './guards'
 export {
+  canChangeMembershipStatus,
+  canCreateSubscriptions,
   canManageClients,
   canManageCoaches,
+  canManageMemberships,
+  canManageSubscriptions,
   canViewClientAttendance,
   canViewClientMembership,
   canViewClientProgress,
   canViewClients,
   canViewCoaches,
+  canViewMemberships,
+  canViewPayments,
+  canViewSubscriptions,
   clientManageRoles,
   clientViewRoles,
   coachManageRoles,
   coachViewRoles,
+  membershipManageRoles,
+  membershipStatusRoles,
+  membershipViewRoles,
+  paymentViewRoles,
+  subscriptionCreateRoles,
+  subscriptionManageRoles,
+  subscriptionViewRoles,
 } from './permissions'
 export type { AuthSession, AuthUser, LoginResponse } from './types'

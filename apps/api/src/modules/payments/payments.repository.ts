@@ -1,10 +1,11 @@
 import type Stripe from 'stripe'
-import type { EntityManager, Repository } from 'typeorm'
+import type { EntityManager, FindOptionsWhere, Repository } from 'typeorm'
 import { Membership } from '../memberships/membership.entity.js'
 import { Subscription, SubscriptionStatus } from '../memberships/subscription.entity.js'
 import type { PendingPaymentInput } from '../memberships/types.js'
 import { Payment, PaymentStatus } from './payment.entity.js'
 import { StripeEvent } from './stripe-event.entity.js'
+import type { PaymentFilters } from './payments.types.js'
 
 export class PaymentsRepository {
   constructor(
@@ -39,6 +40,20 @@ export class PaymentsRepository {
 
   findById(id: number): Promise<Payment | null> {
     return this.paymentRepository.findOneBy({ id })
+  }
+
+  listPayments(filters: PaymentFilters): Promise<Payment[]> {
+    const where: FindOptionsWhere<Payment> = {}
+
+    if (filters.clientId !== undefined) { where.clientId = filters.clientId }
+    if (filters.subscriptionId !== undefined) { where.subscriptionId = filters.subscriptionId }
+    if (filters.method !== undefined) { where.method = filters.method }
+    if (filters.status !== undefined) { where.status = filters.status }
+
+    return this.paymentRepository.find({
+      where,
+      order: { createdAt: 'DESC' },
+    })
   }
 
   findByStripePaymentIntentId(stripePaymentIntentId: string): Promise<Payment | null> {

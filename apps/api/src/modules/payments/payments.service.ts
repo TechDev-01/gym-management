@@ -1,11 +1,15 @@
 import Stripe from 'stripe'
 import type { EntityManager } from 'typeorm'
 import { ConflictError } from '../../shared/errors/conflict.error.js'
+import { NotFoundError } from '../../shared/errors/not-found.error.js'
 import { PaymentGatewayError } from '../../shared/errors/payment-gateway.error.js'
 import type { CheckoutSessionInput, PaymentGateway, PendingPaymentInput } from '../memberships/types.js'
 import { PaymentStatus } from './payment.entity.js'
 import type { StripeGateway } from './payment-gateway.js'
 import { PaymentsRepository } from './payments.repository.js'
+import { paymentQuerySchema } from './payments.schema.js'
+import type { PaymentResponse } from './payments.types.js'
+import { toPaymentResponse } from './payments.types.js'
 import { getStripeWebhooksQueue } from '../../jobs/queues.js'
 import { NotificationService } from '../../jobs/services.js'
 
@@ -19,6 +23,7 @@ export type PaymentsServiceRepository = Pick<
   | 'findMembershipById'
   | 'findById'
   | 'findByStripePaymentIntentId'
+  | 'listPayments'
   | 'activateSubscription'
   | 'findStripeEvent'
   | 'saveStripeEvent'
@@ -33,6 +38,17 @@ export class PaymentsService implements PaymentGateway {
     private readonly timezone = 'UTC',
     private readonly notificationService = new NotificationService(),
   ) {}
+
+  async listPayments(input: unknown): Promise<PaymentResponse[]> {
+    const filters = paymentQuerySchema.parse(input)
+    return (await this.repository.listPayments(filters)).map(toPaymentResponse)
+  }
+
+  async getPayment(id: number): Promise<PaymentResponse> {
+    const payment = await this.repository.findById(id)
+    if (!payment) throw new NotFoundError('Payment not found')
+    return toPaymentResponse(payment)
+  }
 
   async createPendingPayment(manager: EntityManager, input: PendingPaymentInput): Promise<{ paymentId: number }> {
     const payment = await this.repository.createPendingPayment(manager, input)

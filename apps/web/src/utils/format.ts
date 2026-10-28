@@ -21,6 +21,15 @@ export function formatDateTime(value: string | Date | null | undefined): string 
   }).format(date)
 }
 
+export function formatCurrency(amount: number, currency: string): string {
+  return new Intl.NumberFormat('es-MX', {
+    style: 'currency',
+    currency: currency.toUpperCase(),
+    maximumFractionDigits: 2,
+  }).format(amount)
+}
+
+
 function toDate(value: string | Date | null | undefined): Date | null {
   if (!value) {
     return null
