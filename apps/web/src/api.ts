@@ -1,4 +1,4 @@
-const apiBaseUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api/v1'
+import { request } from './lib/http'
 
 export interface LoginResponse {
   accessToken: string
@@ -12,15 +12,9 @@ export interface LoginResponse {
 }
 
 export async function login(email: string, password: string): Promise<LoginResponse> {
-  const response = await fetch(`${apiBaseUrl}/auth/login`, {
+  return request<LoginResponse>('auth/login', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
+    body: { email, password },
+    handleUnauthorized: false,
   })
-
-  if (!response.ok) {
-    throw new Error('No fue posible iniciar sesión')
-  }
-
-  return response.json() as Promise<LoginResponse>
 }
