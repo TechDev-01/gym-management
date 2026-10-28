@@ -232,6 +232,25 @@ export const openapiDocument = {
     '/stats/reports': {
       post: { tags: ['Stats'], summary: 'Request an administrative report', ...secured(['ADMIN', 'RECEPTION']), requestBody: jsonBody('GenericObject'), responses: success('GenericResponse', '202') },
     },
+    '/stats/reports/{jobId}': {
+      parameters: [
+        {
+          name: 'jobId',
+          in: 'path',
+          required: true,
+          schema: { type: 'string', minLength: 1, maxLength: 200 },
+        },
+      ],
+      get: {
+        tags: ['Stats'],
+        summary: 'Get the status of an administrative report',
+        ...secured(['ADMIN', 'RECEPTION']),
+        responses: {
+          ...success('ReportStatusResponse'),
+          '404': { $ref: '#/components/responses/NotFound' },
+        },
+      },
+    },
     '/payments': {
       get: { tags: ['Payments'], summary: 'List payments', ...secured(['ADMIN', 'RECEPTION']), responses: success('GenericListResponse') },
     },
@@ -258,6 +277,19 @@ export const openapiDocument = {
     schemas: {
       GenericObject: { type: 'object', additionalProperties: true },
       GenericResponse: { type: 'object', additionalProperties: true },
+      ReportStatusResponse: {
+        type: 'object',
+        required: ['jobId', 'reportType', 'status'],
+        properties: {
+          jobId: { type: 'string' },
+          reportType: { type: 'string', example: 'dashboard-summary' },
+          status: { type: 'string', enum: ['pending', 'completed', 'failed'] },
+          requestedAt: { type: 'string', format: 'date-time', nullable: true },
+          finishedAt: { type: 'string', format: 'date-time', nullable: true },
+          result: { type: 'object', additionalProperties: true, nullable: true },
+          error: { type: 'string', nullable: true },
+        },
+      },
       GenericListResponse: { type: 'array', items: { $ref: '#/components/schemas/GenericObject' } },
       HealthResponse: { type: 'object', required: ['status'], properties: { status: { type: 'string', example: 'ok' } } },
       ModuleHealthResponse: { type: 'object', required: ['status', 'module'], properties: { status: { type: 'string', example: 'ok' }, module: { type: 'string' } } },

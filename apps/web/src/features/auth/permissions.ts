@@ -18,6 +18,7 @@ export const routineManageRoles: UserRole[] = ['ADMIN', 'COACH']
 export const routineAssignRoles: UserRole[] = ['ADMIN', 'COACH']
 export const progressViewRoles: UserRole[] = ['ADMIN', 'COACH', 'CLIENT']
 export const progressManageRoles: UserRole[] = ['ADMIN', 'COACH', 'CLIENT']
+export const statsViewRoles: UserRole[] = ['ADMIN', 'RECEPTION']
 
 export function canViewClients(role: UserRole | undefined): boolean {
   return role !== undefined && clientViewRoles.includes(role)
@@ -101,4 +102,8 @@ export function canViewProgress(role: UserRole | undefined): boolean {
 
 export function canManageProgress(role: UserRole | undefined): boolean {
   return role !== undefined && progressManageRoles.includes(role)
+}
+
+export function canViewStats(role: UserRole | undefined): boolean {
+  return role !== undefined && statsViewRoles.includes(role)
 }

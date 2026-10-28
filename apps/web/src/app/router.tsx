@@ -14,6 +14,7 @@ import {
   RoleGuard,
   routineManageRoles,
   routineViewRoles,
+  statsViewRoles,
   subscriptionCreateRoles,
   subscriptionViewRoles,
 } from '../features/auth'
@@ -30,6 +31,7 @@ import {
 } from '../features/memberships'
 import { PaymentsPage } from '../features/payments'
 import { ProgressPage } from '../features/progress'
+import { StatsPage } from '../features/stats'
 import {
   AssignmentsPage,
   ExercisesPage,
@@ -57,6 +59,9 @@ export function AppRouter() {
       <Route path="/login" element={<LoginPage />} />
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route element={<RoleGuard roles={statsViewRoles} />}>
+          <Route path="/stats" element={<StatsPage />} />
+        </Route>
         <Route element={<RoleGuard roles={clientViewRoles} />}>
           <Route path="/clients" element={<ClientsPage />} />
           <Route path="/clients/:id" element={<ClientDetailPage />} />

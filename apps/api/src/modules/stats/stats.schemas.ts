@@ -11,6 +11,10 @@ export const dashboardQuerySchema = z.object({
   path: ['from'],
 })
 
+export const reportParamsSchema = z.object({
+  jobId: z.string().min(1).max(200),
+}).strict()
+
 export const reportRequestSchema = z.object({
   reportType: z.literal('dashboard-summary'),
   from: dateSchema.optional(),

@@ -1,11 +1,12 @@
 import type { NextFunction, Request, Response } from 'express'
-import type { ReportService } from '../../jobs/services.js'
+import type { ReportQueuePort } from '../../jobs/services.js'
+import { NotFoundError } from '../../shared/errors/not-found.error.js'
 import type { StatsService } from './stats.service.js'
 
 export class StatsController {
   constructor(
     private readonly service: StatsService,
-    private readonly reportService: ReportService,
+    private readonly reportService: ReportQueuePort,
   ) {}
 
   dashboard = async (request: Request, response: Response, next: NextFunction): Promise<void> => {
@@ -32,6 +33,31 @@ export class StatsController {
         },
       }, `admin-report-${requestedById}-${Date.now()}`)
       response.status(202).json({ jobId: job.id })
+    } catch (error: unknown) {
+      next(error)
+    }
+  }
+
+  reportStatus = async (request: Request, response: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { jobId } = request.params
+      const report = typeof jobId === 'string'
+        ? await this.reportService.getStatus(jobId)
+        : null
+
+      if (!report || report.requestedById !== Number(request.user!.id)) {
+        throw new NotFoundError('Report not found')
+      }
+
+      response.json({
+        jobId: report.jobId,
+        reportType: report.reportType,
+        status: report.status,
+        requestedAt: report.requestedAt,
+        finishedAt: report.finishedAt,
+        result: report.result,
+        error: report.error,
+      })
     } catch (error: unknown) {
       next(error)
     }
