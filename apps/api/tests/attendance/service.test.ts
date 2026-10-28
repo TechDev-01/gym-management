@@ -34,6 +34,15 @@ function createRepository(overrides: Partial<AttendanceRepository> = {}): Attend
   }
 }
 
+test('check-in accepts a request without a body for self service', async () => {
+  const service = new AttendanceService(createRepository(), 'UTC', () => now)
+
+  const result = await service.checkIn(undefined, user)
+
+  assert.equal(result.clientId, 7)
+  assert.equal(result.subscriptionId, 20)
+})
+
 test('check-in requires an active subscription', async () => {
   const repository = createRepository({
     findActiveSubscription: async () => null,

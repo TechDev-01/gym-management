@@ -20,7 +20,7 @@ export class AttendanceService {
   ) {}
 
   async checkIn(input: unknown, user: UserContext): Promise<ReturnType<typeof toAttendanceResponse>> {
-    const data = checkInSchema.parse(input)
+    const data = checkInSchema.parse(input ?? {})
     const clientId = user.role === 'CLIENT' ? user.clientId : data.clientId
     if (!clientId) throw new ConflictError('clientId is required')
     if (user.role === 'CLIENT' && data.clientId !== undefined && data.clientId !== user.clientId) {
