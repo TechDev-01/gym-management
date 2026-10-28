@@ -48,6 +48,7 @@ function renderDashboard() {
 
 describe('dashboard', () => {
   beforeEach(() => {
+    authState.user.role = 'ADMIN'
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue(
@@ -83,5 +84,33 @@ describe('dashboard', () => {
 
     expect(await screen.findByText(/estadísticas del dashboard están disponibles/i)).toBeInTheDocument()
     expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it('shows the API error without rendering invented metrics', async () => {
+    vi.mocked(fetch).mockImplementation(() => Promise.resolve(
+      new Response(JSON.stringify({ error: 'No fue posible cargar el dashboard.' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    ))
+
+    renderDashboard()
+
+    expect(await screen.findByRole('alert', {}, { timeout: 3_000 })).toHaveTextContent(/error interno|No fue posible cargar el dashboard/i)
+    expect(screen.queryByText('1,248')).not.toBeInTheDocument()
+  })
+
+  it('shows empty states for periods without activity', async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      new Response(JSON.stringify({ ...dashboardResponse, payments: [], coachUsage: [] }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    renderDashboard()
+
+    expect(await screen.findByText('No hay pagos para este periodo.')).toBeInTheDocument()
+    expect(screen.getByText('No hay actividad de entrenadores para este periodo.')).toBeInTheDocument()
   })
 })

@@ -225,6 +225,7 @@ export function SubscriptionFormPage() {
                 select
                 label="Cliente"
                 fullWidth
+                defaultValue={user?.clientId ? String(user.clientId) : ''}
                 {...register('clientId')}
                 error={Boolean(errors.clientId)}
                 helperText={errors.clientId?.message}
@@ -253,6 +254,7 @@ export function SubscriptionFormPage() {
               select
               label="Membresía"
               fullWidth
+              defaultValue=""
               {...register('membershipId')}
               error={Boolean(errors.membershipId)}
               helperText={errors.membershipId?.message}
@@ -269,6 +271,7 @@ export function SubscriptionFormPage() {
               select
               label="Método de pago"
               fullWidth
+              defaultValue="CASH"
               {...register('method')}
               error={Boolean(errors.method)}
               helperText={errors.method?.message}

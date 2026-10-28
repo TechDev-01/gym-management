@@ -74,6 +74,13 @@ npm run openapi:generate
 npm run openapi:check
 ```
 
+La estrategia de pruebas del frontend está documentada en
+`docs/frontend-testing.md`. La suite se ejecuta con:
+
+```bash
+npm run test:web
+```
+
 ## Stripe y jobs
 
 El webhook debe reenviarse a
