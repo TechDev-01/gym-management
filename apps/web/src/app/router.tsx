@@ -22,6 +22,7 @@ import { AttendancePage } from '../features/attendance'
 import { ClientDetailPage, ClientFormPage, ClientsPage } from '../features/clients'
 import { CoachDetailPage, CoachFormPage, CoachesPage } from '../features/coaches'
 import { DashboardPage } from '../features/dashboard/pages/DashboardPage'
+import { LandingPage } from '../features/landing/pages/LandingPage'
 import {
   MembershipFormPage,
   MembershipsPage,
@@ -56,6 +57,7 @@ function NotFoundPage() {
 export function AppRouter() {
   return (
     <Routes>
+      <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<DashboardPage />} />
@@ -111,7 +113,6 @@ export function AppRouter() {
         <Route element={<RoleGuard roles={progressViewRoles} />}>
           <Route path="/progress" element={<ProgressPage />} />
         </Route>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
