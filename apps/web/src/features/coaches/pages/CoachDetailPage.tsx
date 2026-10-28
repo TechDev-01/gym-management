@@ -6,6 +6,7 @@ import { PageHeader } from '../../../components/layout/PageHeader'
 import { Panel } from '../../../components/ui/Panel'
 import { StatusBadge } from '../../../components/ui/StatusBadge'
 import { canManageCoaches, useAuth } from '../../auth'
+import { CoachSchedulesPanel } from '../components/CoachSchedulesPanel'
 import { useCoach } from '../hooks'
 
 export function CoachDetailPage() {
@@ -76,20 +77,7 @@ export function CoachDetailPage() {
         </Grid>
         <Grid size={{ xs: 12, md: 7 }}>
           <Stack spacing={2}>
-            <Panel
-              title="Horarios"
-              subtitle="La API actual aún no expone operaciones de horarios."
-            >
-              <Stack spacing={1.5} sx={{ mt: 2 }}>
-                <Typography color="text.secondary">
-                  La gestión de horarios estará disponible cuando exista el endpoint
-                  correspondiente.
-                </Typography>
-                <Button disabled variant="outlined">
-                  Agregar horario
-                </Button>
-              </Stack>
-            </Panel>
+            <CoachSchedulesPanel coachId={coach.id} canManage={canManage} />
             <Panel
               title="Rutinas y clientes asignados"
               subtitle="Relación operativa del entrenador."
