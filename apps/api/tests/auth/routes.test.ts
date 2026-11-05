@@ -75,7 +75,10 @@ test('register requires an ADMIN bearer token', async () => {
   })
 
   assert.equal(response.status, 401)
-  assert.deepEqual(await response.json(), { error: 'Missing bearer token' })
+  const body = await response.json()
+  assert.equal(body.error, 'Missing bearer token')
+  assert.equal(body.code, 'UNAUTHORIZED')
+  assert.equal(typeof body.requestId, 'string')
 })
 
 test('register rejects a non-admin bearer token', async () => {
@@ -99,5 +102,40 @@ test('register rejects a non-admin bearer token', async () => {
   })
 
   assert.equal(response.status, 403)
-  assert.deepEqual(await response.json(), { error: 'Forbidden' })
+  const body = await response.json()
+  assert.equal(body.error, 'Forbidden')
+  assert.equal(body.code, 'FORBIDDEN')
+})
+
+test('login rejects a malformed JSON body with 400 and a stable error code', async () => {
+  const response = await request('/auth/login', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: '{',
+  })
+
+  assert.equal(response.status, 400)
+  const body = await response.json()
+  assert.equal(body.error, 'Malformed JSON body')
+  assert.equal(body.code, 'INVALID_JSON')
+  assert.equal(typeof body.requestId, 'string')
+  assert.equal(response.headers.get('x-request-id'), body.requestId)
+})
+
+test('login is rate limited per IP and email', async () => {
+  let lastResponse: Response | null = null
+
+  for (let attempt = 0; attempt < 11; attempt += 1) {
+    lastResponse = await request('/auth/login', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email: 'brute-force@example.com', password: 'wrong-password' }),
+    })
+  }
+
+  assert(lastResponse)
+  assert.equal(lastResponse.status, 429)
+  const body = await lastResponse.json()
+  assert.equal(body.code, 'RATE_LIMITED')
+  assert.equal(typeof lastResponse.headers.get('retry-after'), 'string')
 })

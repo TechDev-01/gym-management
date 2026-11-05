@@ -5,10 +5,17 @@ export interface AuthenticatedRequestUser {
   coachId: number | null
 }
 
+export interface ValidatedRequestData {
+  body?: unknown
+  params?: unknown
+  query?: unknown
+}
+
 declare global {
   namespace Express {
     interface Request {
       user?: AuthenticatedRequestUser
+      validated?: ValidatedRequestData
     }
   }
 }

@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from 'express'
-import { ZodError } from 'zod'
+import { UnauthorizedError } from '../../shared/errors/unauthorized.error.js'
 import { AuthenticationError, type AuthService } from './auth.service.js'
 
 export class AuthController {
@@ -11,12 +11,7 @@ export class AuthController {
       response.status(200).json(authenticatedUser)
     } catch (error: unknown) {
       if (error instanceof AuthenticationError) {
-        response.status(401).json({ error: error.message })
-        return
-      }
-
-      if (error instanceof ZodError) {
-        response.status(400).json({ error: 'Invalid login request' })
+        next(new UnauthorizedError(error.message))
         return
       }
 
@@ -29,11 +24,6 @@ export class AuthController {
       const authenticatedUser = await this.authService.register(request.body)
       response.status(201).json(authenticatedUser)
     } catch (error: unknown) {
-      if (error instanceof ZodError) {
-        response.status(400).json({ error: 'Invalid registration request' })
-        return
-      }
-
       next(error)
     }
   }

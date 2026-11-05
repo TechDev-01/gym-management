@@ -118,7 +118,9 @@ test('GET /clients/:id returns 404 for an unknown client', async () => {
   const response = await request('/clients/99')
 
   assert.equal(response.status, 404)
-  assert.deepEqual(await response.json(), { error: 'Client not found' })
+  const body = await response.json()
+  assert.equal(body.error, 'Client not found')
+  assert.equal(body.code, 'NOT_FOUND')
 })
 
 test('GET /clients/:id returns 400 for an invalid id', async () => {

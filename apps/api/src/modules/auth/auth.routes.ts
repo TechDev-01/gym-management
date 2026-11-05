@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { authenticate } from '../../shared/middlewares/auth.middleware.js'
 import { requireRole } from '../../shared/middlewares/role.middleware.js'
+import { loginRateLimiter } from '../../shared/middlewares/rate-limit.middleware.js'
 import { validate } from '../../shared/middlewares/validate.middleware.js'
 import { AuthController } from './auth.controller.js'
 import { loginSchema, registerSchema } from './auth.schema.js'
@@ -10,7 +11,7 @@ export function createAuthRouter(authService: AuthService): Router {
   const router = Router()
   const authController = new AuthController(authService)
 
-  router.post('/login', validate({ body: loginSchema }), authController.login)
+  router.post('/login', loginRateLimiter, validate({ body: loginSchema }), authController.login)
   router.post(
     '/register',
     authenticate(),

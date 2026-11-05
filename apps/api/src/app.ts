@@ -7,10 +7,18 @@ import { v1Router } from './routes/v1/index.js'
 import { openapiDocument } from './docs/openapi.js'
 import { errorHandlerMiddleware } from './shared/middlewares/error-handler.middleware.js'
 import { notFoundMiddleware } from './shared/middlewares/not-found.middleware.js'
+import { globalRateLimiter } from './shared/middlewares/rate-limit.middleware.js'
+import { requestIdMiddleware } from './shared/middlewares/request-id.middleware.js'
 
 export const app = express()
 
+if (env.TRUST_PROXY_HOPS > 0) {
+  app.set('trust proxy', env.TRUST_PROXY_HOPS)
+}
+
+app.use(requestIdMiddleware)
 app.use(cors({ origin: env.CORS_ORIGIN }))
+app.use(globalRateLimiter)
 app.use('/api/v1/payments', paymentsRouter)
 app.get('/api/docs.json', (_request, response) => {
   response.status(200).json(openapiDocument)

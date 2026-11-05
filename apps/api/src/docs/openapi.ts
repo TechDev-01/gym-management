@@ -71,6 +71,7 @@ export const openapiDocument = {
           ...success('AuthResponse'),
           '400': { $ref: '#/components/responses/BadRequest' },
           '401': { $ref: '#/components/responses/Unauthorized' },
+          '429': { $ref: '#/components/responses/TooManyRequests' },
         },
       },
     },
@@ -112,6 +113,7 @@ export const openapiDocument = {
           '400': { $ref: '#/components/responses/BadRequest' },
           '401': { $ref: '#/components/responses/Unauthorized' },
           '403': { $ref: '#/components/responses/Forbidden' },
+          '409': { $ref: '#/components/responses/Conflict' },
         },
       },
     },
@@ -125,6 +127,7 @@ export const openapiDocument = {
           ...success('ClientResponse'),
           '401': { $ref: '#/components/responses/Unauthorized' },
           '403': { $ref: '#/components/responses/Forbidden' },
+          '404': { $ref: '#/components/responses/NotFound' },
         },
       },
       patch: {
@@ -162,8 +165,10 @@ export const openapiDocument = {
         requestBody: jsonBody('CreateCoachRequest'),
         responses: {
           ...success('CoachResponse', '201'),
+          '400': { $ref: '#/components/responses/BadRequest' },
           '401': { $ref: '#/components/responses/Unauthorized' },
           '403': { $ref: '#/components/responses/Forbidden' },
+          '409': { $ref: '#/components/responses/Conflict' },
         },
       },
     },
@@ -177,6 +182,7 @@ export const openapiDocument = {
           ...success('CoachResponse'),
           '401': { $ref: '#/components/responses/Unauthorized' },
           '403': { $ref: '#/components/responses/Forbidden' },
+          '404': { $ref: '#/components/responses/NotFound' },
         },
       },
       patch: {
@@ -186,8 +192,11 @@ export const openapiDocument = {
         requestBody: jsonBody('UpdateCoachRequest'),
         responses: {
           ...success('CoachResponse'),
+          '400': { $ref: '#/components/responses/BadRequest' },
           '401': { $ref: '#/components/responses/Unauthorized' },
           '403': { $ref: '#/components/responses/Forbidden' },
+          '404': { $ref: '#/components/responses/NotFound' },
+          '409': { $ref: '#/components/responses/Conflict' },
         },
       },
     },
@@ -269,35 +278,35 @@ export const openapiDocument = {
     },
     '/memberships': {
       get: { tags: ['Memberships'], summary: 'List memberships', ...secured(['ADMIN', 'RECEPTION', 'CLIENT']), parameters: [queryParameter('includeInactive', { type: 'boolean', default: false })], responses: success('MembershipListResponse') },
-      post: { tags: ['Memberships'], summary: 'Create a membership', ...secured(['ADMIN', 'RECEPTION']), requestBody: jsonBody('CreateMembershipRequest'), responses: success('MembershipResponse', '201') },
+      post: { tags: ['Memberships'], summary: 'Create a membership', ...secured(['ADMIN', 'RECEPTION']), requestBody: jsonBody('CreateMembershipRequest'), responses: { ...success('MembershipResponse', '201'), '400': { $ref: '#/components/responses/BadRequest' }, '409': { $ref: '#/components/responses/Conflict' } } },
     },
     '/memberships/{id}': {
       parameters: [idParameter],
-      get: { tags: ['Memberships'], summary: 'Get a membership', ...secured(['ADMIN', 'RECEPTION', 'CLIENT']), responses: success('MembershipResponse') },
-      patch: { tags: ['Memberships'], summary: 'Update a membership', ...secured(['ADMIN', 'RECEPTION']), requestBody: jsonBody('UpdateMembershipRequest'), responses: success('MembershipResponse') },
+      get: { tags: ['Memberships'], summary: 'Get a membership', ...secured(['ADMIN', 'RECEPTION', 'CLIENT']), responses: { ...success('MembershipResponse'), '404': { $ref: '#/components/responses/NotFound' } } },
+      patch: { tags: ['Memberships'], summary: 'Update a membership', ...secured(['ADMIN', 'RECEPTION']), requestBody: jsonBody('UpdateMembershipRequest'), responses: { ...success('MembershipResponse'), '400': { $ref: '#/components/responses/BadRequest' }, '404': { $ref: '#/components/responses/NotFound' }, '409': { $ref: '#/components/responses/Conflict' } } },
     },
     '/memberships/{id}/status': {
       parameters: [idParameter],
-      patch: { tags: ['Memberships'], summary: 'Change membership status', ...secured(['ADMIN']), requestBody: jsonBody('MembershipStatusRequest'), responses: success('MembershipResponse') },
+      patch: { tags: ['Memberships'], summary: 'Change membership status', ...secured(['ADMIN']), requestBody: jsonBody('MembershipStatusRequest'), responses: { ...success('MembershipResponse'), '400': { $ref: '#/components/responses/BadRequest' }, '404': { $ref: '#/components/responses/NotFound' } } },
     },
     '/memberships/{id}/subscriptions': {
       parameters: [idParameter],
-      post: { tags: ['Memberships'], summary: 'Create a subscription', ...secured(['ADMIN', 'RECEPTION', 'CLIENT']), requestBody: jsonBody('CreateSubscriptionRequest'), responses: success('SubscriptionWithCheckoutResponse', '201') },
+      post: { tags: ['Memberships'], summary: 'Create a subscription', ...secured(['ADMIN', 'RECEPTION', 'CLIENT']), requestBody: jsonBody('CreateSubscriptionRequest'), responses: { ...success('SubscriptionWithCheckoutResponse', '201'), '400': { $ref: '#/components/responses/BadRequest' }, '404': { $ref: '#/components/responses/NotFound' }, '409': { $ref: '#/components/responses/Conflict' } } },
     },
     '/subscriptions': {
       get: { tags: ['Subscriptions'], summary: 'List subscriptions', ...secured(['ADMIN', 'RECEPTION', 'CLIENT']), parameters: [queryParameter('clientId', { type: 'integer', minimum: 1 }), queryParameter('status', { $ref: '#/components/schemas/SubscriptionStatus' })], responses: success('SubscriptionListResponse') },
     },
     '/subscriptions/{id}': {
       parameters: [idParameter],
-      get: { tags: ['Subscriptions'], summary: 'Get a subscription', ...secured(['ADMIN', 'RECEPTION', 'CLIENT']), responses: success('SubscriptionResponse') },
+      get: { tags: ['Subscriptions'], summary: 'Get a subscription', ...secured(['ADMIN', 'RECEPTION', 'CLIENT']), responses: { ...success('SubscriptionResponse'), '404': { $ref: '#/components/responses/NotFound' } } },
     },
     '/subscriptions/{id}/cancel': {
       parameters: [idParameter],
-      post: { tags: ['Subscriptions'], summary: 'Cancel a subscription', ...secured(['ADMIN', 'RECEPTION']), responses: success('SubscriptionResponse') },
+      post: { tags: ['Subscriptions'], summary: 'Cancel a subscription', ...secured(['ADMIN', 'RECEPTION']), responses: { ...success('SubscriptionResponse'), '404': { $ref: '#/components/responses/NotFound' }, '409': { $ref: '#/components/responses/Conflict' } } },
     },
     '/subscriptions/{id}/payment-confirmation': {
       parameters: [idParameter],
-      post: { tags: ['Subscriptions'], summary: 'Confirm a manual payment', ...secured(['ADMIN', 'RECEPTION']), responses: success('SubscriptionResponse') },
+      post: { tags: ['Subscriptions'], summary: 'Confirm a manual payment', ...secured(['ADMIN', 'RECEPTION']), responses: { ...success('SubscriptionResponse'), '404': { $ref: '#/components/responses/NotFound' }, '409': { $ref: '#/components/responses/Conflict' } } },
     },
     '/attendance': {
       get: { tags: ['Attendance'], summary: 'List attendance records', ...secured(['ADMIN', 'RECEPTION', 'CLIENT']), parameters: [queryParameter('clientId', { type: 'integer', minimum: 1 }), queryParameter('from', { type: 'string', format: 'date' }), queryParameter('to', { type: 'string', format: 'date' }), queryParameter('open', { type: 'boolean' }), queryParameter('page', { type: 'integer', minimum: 1, default: 1 }), queryParameter('limit', { type: 'integer', minimum: 1, maximum: 100, default: 20 })], responses: success('AttendancePageResponse') },
@@ -390,17 +399,23 @@ export const openapiDocument = {
     },
     '/payments/{id}': {
       parameters: [idParameter],
-      get: { tags: ['Payments'], summary: 'Get a payment', ...secured(['ADMIN', 'RECEPTION']), responses: success('PaymentResponse') },
+      get: { tags: ['Payments'], summary: 'Get a payment', ...secured(['ADMIN', 'RECEPTION']), responses: { ...success('PaymentResponse'), '404': { $ref: '#/components/responses/NotFound' } } },
     },
     '/payments/webhook': {
       post: {
         tags: ['Payments'],
         summary: 'Receive Stripe webhook events',
+        description: 'Requires the Stripe-Signature header. The raw request body is verified before processing.',
         requestBody: {
           required: true,
           content: { 'application/json': { schema: { type: 'object', additionalProperties: true } } },
         },
-        responses: { '200': { description: 'Webhook accepted' }, '400': { $ref: '#/components/responses/BadRequest' } },
+        responses: {
+          '200': { description: 'Webhook accepted' },
+          '400': { $ref: '#/components/responses/BadRequest' },
+          '409': { $ref: '#/components/responses/Conflict' },
+          '502': { $ref: '#/components/responses/BadGateway' },
+        },
       },
     },
   },
@@ -532,13 +547,13 @@ export const openapiDocument = {
         type: 'object', required: ['id', 'name', 'description', 'durationDays', 'maxDaysPerWeek', 'priceAmount', 'currency', 'isActive', 'stripePriceId'],
         properties: {
           id: { type: 'integer' }, name: { type: 'string' }, description: { type: 'string', nullable: true },
-          durationDays: { type: 'integer' }, maxDaysPerWeek: { type: 'integer', nullable: true }, priceAmount: { type: 'number' },
+          durationDays: { type: 'integer' }, maxDaysPerWeek: { type: 'integer', nullable: true }, priceAmount: { type: 'integer' },
           currency: { type: 'string' }, isActive: { type: 'boolean' }, stripePriceId: { type: 'string', nullable: true },
         },
       },
       MembershipListResponse: { type: 'array', items: { $ref: '#/components/schemas/MembershipResponse' } },
-      CreateMembershipRequest: { type: 'object', required: ['name', 'durationDays', 'priceAmount'], properties: { name: { type: 'string' }, description: { type: 'string', nullable: true }, durationDays: { type: 'integer' }, maxDaysPerWeek: { type: 'integer', nullable: true }, priceAmount: { type: 'number' }, currency: { type: 'string', minLength: 3, maxLength: 3 }, stripePriceId: { type: 'string', nullable: true } } },
-      UpdateMembershipRequest: { type: 'object', minProperties: 1, properties: { name: { type: 'string' }, description: { type: 'string', nullable: true }, durationDays: { type: 'integer' }, maxDaysPerWeek: { type: 'integer', nullable: true }, priceAmount: { type: 'number' } } },
+      CreateMembershipRequest: { type: 'object', required: ['name', 'durationDays', 'priceAmount'], properties: { name: { type: 'string' }, description: { type: 'string', nullable: true }, durationDays: { type: 'integer' }, maxDaysPerWeek: { type: 'integer', nullable: true }, priceAmount: { type: 'integer' }, currency: { type: 'string', minLength: 3, maxLength: 3 }, stripePriceId: { type: 'string', nullable: true } } },
+      UpdateMembershipRequest: { type: 'object', minProperties: 1, properties: { name: { type: 'string' }, description: { type: 'string', nullable: true }, durationDays: { type: 'integer' }, maxDaysPerWeek: { type: 'integer', nullable: true }, priceAmount: { type: 'integer' } } },
       MembershipStatusRequest: { type: 'object', required: ['isActive'], properties: { isActive: { type: 'boolean' } }, additionalProperties: false },
       SubscriptionStatus: { type: 'string', enum: ['PENDING', 'ACTIVE', 'EXPIRED', 'CANCELLED'] },
       PaymentMethod: { type: 'string', enum: ['CARD', 'CASH', 'TRANSFER'] },
@@ -572,7 +587,19 @@ export const openapiDocument = {
       ReportRequestResponse: { type: 'object', required: ['jobId'], properties: { jobId: { type: 'string' } } },
       PaymentResponse: { type: 'object', required: ['id', 'clientId', 'subscriptionId', 'method', 'status', 'amount', 'currency', 'refundedAmount', 'receiptUrl', 'recordedById', 'paidAt', 'createdAt'], properties: { id: { type: 'integer' }, clientId: { type: 'integer' }, subscriptionId: { type: 'integer' }, method: { $ref: '#/components/schemas/PaymentMethod' }, status: { type: 'string', enum: ['PENDING', 'SUCCEEDED', 'FAILED', 'REFUNDED'] }, amount: { type: 'number' }, currency: { type: 'string' }, refundedAmount: { type: 'number' }, receiptUrl: { type: 'string', format: 'uri', nullable: true }, recordedById: { type: 'integer', nullable: true }, paidAt: { type: 'string', format: 'date-time', nullable: true }, createdAt: { type: 'string', format: 'date-time' } } },
       PaymentListResponse: { type: 'array', items: { $ref: '#/components/schemas/PaymentResponse' } },
-      ErrorResponse: { type: 'object', required: ['error'], properties: { error: { type: 'string' } } },
+      ErrorResponse: {
+        type: 'object',
+        required: ['error', 'code', 'requestId', 'timestamp', 'path'],
+        properties: {
+          error: { type: 'string' },
+          code: { type: 'string', description: 'Stable machine-readable error code' },
+          requestId: { type: 'string' },
+          timestamp: { type: 'string', format: 'date-time' },
+          path: { type: 'string' },
+          details: { description: 'Optional structured error details' },
+          issues: { type: 'array', items: { type: 'object', additionalProperties: true }, description: 'Validation issues (deprecated alias of details)' },
+        },
+      },
     },
     responses: {
       BadRequest: { description: 'Invalid request', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
@@ -580,6 +607,12 @@ export const openapiDocument = {
       Forbidden: { description: 'Insufficient permissions', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
       NotFound: { description: 'Resource not found', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
       Conflict: { description: 'Resource conflict', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
+      TooManyRequests: {
+        description: 'Rate limit exceeded',
+        headers: { 'Retry-After': { schema: { type: 'integer' }, description: 'Seconds to wait before retrying' } },
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } },
+      },
+      BadGateway: { description: 'Upstream payment provider error', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
     },
   },
 } as const

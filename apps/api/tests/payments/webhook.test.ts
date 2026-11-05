@@ -40,7 +40,9 @@ test('webhook rejects missing signature while preserving the raw body contract',
 
   const missingSignature = await request(service, '{"id":"evt_1"}')
   assert.equal(missingSignature.status, 409)
-  assert.deepEqual(await missingSignature.json(), { error: 'Stripe signature or raw body is missing' })
+  const missingSignatureBody = await missingSignature.json()
+  assert.equal(missingSignatureBody.error, 'Stripe signature or raw body is missing')
+  assert.equal(missingSignatureBody.code, 'CONFLICT')
   assert.equal(calls.length, 0)
 
   const accepted = await request(service, '{"id":"evt_2"}', 'valid-signature')

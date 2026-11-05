@@ -11,15 +11,23 @@ export function validate(schemas: ValidationSchemas): RequestHandler {
   return (request: Request, _response: Response, next: NextFunction): void => {
     try {
       if (schemas.body) {
-        request.body = schemas.body.parse(request.body)
+        const body = schemas.body.parse(request.body)
+        request.body = body
+        request.validated = { ...request.validated, body }
       }
 
       if (schemas.params) {
-        schemas.params.parse(request.params)
+        request.validated = {
+          ...request.validated,
+          params: schemas.params.parse(request.params),
+        }
       }
 
       if (schemas.query) {
-        schemas.query.parse(request.query)
+        request.validated = {
+          ...request.validated,
+          query: schemas.query.parse(request.query),
+        }
       }
 
       next()

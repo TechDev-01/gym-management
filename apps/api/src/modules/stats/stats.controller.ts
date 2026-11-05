@@ -11,7 +11,8 @@ export class StatsController {
 
   dashboard = async (request: Request, response: Response, next: NextFunction): Promise<void> => {
     try {
-      response.json(await this.service.dashboard(request.query))
+      const query = request.validated?.query ?? request.query
+      response.json(await this.service.dashboard(query))
     } catch (error: unknown) {
       next(error)
     }
@@ -40,7 +41,8 @@ export class StatsController {
 
   reportStatus = async (request: Request, response: Response, next: NextFunction): Promise<void> => {
     try {
-      const { jobId } = request.params
+      const params = (request.validated?.params ?? request.params) as { jobId?: unknown }
+      const { jobId } = params
       const report = typeof jobId === 'string'
         ? await this.reportService.getStatus(jobId)
         : null
