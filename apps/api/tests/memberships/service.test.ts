@@ -45,14 +45,24 @@ function createRepository(overrides: Partial<MembershipsRepository> = {}): Membe
   return {
     findMembershipById: async () => membership,
     findMembershipByName: async () => null,
-    listMemberships: async () => [membership],
+    listMemberships: async (filters) => ({
+      items: [membership],
+      page: filters.page,
+      limit: filters.limit,
+      total: 1,
+    }),
     countMembershipSubscriptions: async () => 0,
     createMembership: async (input) => createMembership(input),
     updateMembership: async (_id, input) => createMembership(input),
     setMembershipActive: async (_id, isActive) => createMembership({ isActive }),
     findClientById: async () => ({ id: 7, isActive: true } as Client),
     findSubscriptionById: async () => subscription,
-    listSubscriptions: async () => [subscription],
+    listSubscriptions: async (filters) => ({
+      items: [subscription],
+      page: filters.page,
+      limit: filters.limit,
+      total: 1,
+    }),
     findClientSubscription: async () => null,
     createSubscription: async (input) => createSubscription(input),
     cancelSubscription: async () => createSubscription({ status: SubscriptionStatus.CANCELLED }),
@@ -153,7 +163,12 @@ test('lists active subscriptions for staff without an undefined client filter', 
   const repository = createRepository({
     listSubscriptions: async (filters) => {
       receivedFilters = filters
-      return [createSubscription({ status: SubscriptionStatus.ACTIVE })]
+      return {
+        items: [createSubscription({ status: SubscriptionStatus.ACTIVE })],
+        page: filters.page,
+        limit: filters.limit,
+        total: 1,
+      }
     },
   })
 
@@ -162,8 +177,12 @@ test('lists active subscriptions for staff without an undefined client filter', 
     { role: 'ADMIN', clientId: null },
   )
 
-  assert.deepEqual(receivedFilters, { status: SubscriptionStatus.ACTIVE })
-  assert.equal(result.length, 1)
+  assert.deepEqual(receivedFilters, {
+    status: SubscriptionStatus.ACTIVE,
+    page: 1,
+    limit: 20,
+  })
+  assert.equal(result.items.length, 1)
 })
 
 test('restricts subscription listings to the client own record', async () => {
@@ -171,7 +190,12 @@ test('restricts subscription listings to the client own record', async () => {
   const repository = createRepository({
     listSubscriptions: async (filters) => {
       receivedFilters = filters
-      return [createSubscription({ status: SubscriptionStatus.ACTIVE })]
+      return {
+        items: [createSubscription({ status: SubscriptionStatus.ACTIVE })],
+        page: filters.page,
+        limit: filters.limit,
+        total: 1,
+      }
     },
   })
 
@@ -180,5 +204,5 @@ test('restricts subscription listings to the client own record', async () => {
     { role: 'CLIENT', clientId: 7 },
   )
 
-  assert.deepEqual(receivedFilters, { clientId: 7 })
+  assert.deepEqual(receivedFilters, { clientId: 7, page: 1, limit: 20 })
 })

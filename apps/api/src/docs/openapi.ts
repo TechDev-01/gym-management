@@ -12,6 +12,22 @@ const queryParameter = (name: string, schema: Record<string, unknown>) => ({
   schema,
 })
 
+const paginationParameters = [
+  queryParameter('page', { type: 'integer', minimum: 1, default: 1 }),
+  queryParameter('limit', { type: 'integer', minimum: 1, maximum: 100, default: 20 }),
+]
+
+const pageResponse = (schema: string) => ({
+  type: 'object',
+  required: ['items', 'page', 'limit', 'total'],
+  properties: {
+    items: { type: 'array', items: { $ref: `#/components/schemas/${schema}` } },
+    page: { type: 'integer' },
+    limit: { type: 'integer' },
+    total: { type: 'integer' },
+  },
+})
+
 const jsonBody = (schema: string) => ({
   required: true,
   content: {
@@ -97,6 +113,7 @@ export const openapiDocument = {
         tags: ['Clients'],
         summary: 'List clients',
         ...secured(['ADMIN', 'RECEPTION', 'COACH']),
+        parameters: paginationParameters,
         responses: {
           ...success('ClientListResponse'),
           '401': { $ref: '#/components/responses/Unauthorized' },
@@ -152,6 +169,7 @@ export const openapiDocument = {
         tags: ['Coaches'],
         summary: 'List coaches',
         ...secured(['ADMIN', 'RECEPTION', 'COACH']),
+        parameters: paginationParameters,
         responses: {
           ...success('CoachListResponse'),
           '401': { $ref: '#/components/responses/Unauthorized' },
@@ -277,7 +295,7 @@ export const openapiDocument = {
       },
     },
     '/memberships': {
-      get: { tags: ['Memberships'], summary: 'List memberships', ...secured(['ADMIN', 'RECEPTION', 'CLIENT']), parameters: [queryParameter('includeInactive', { type: 'boolean', default: false })], responses: success('MembershipListResponse') },
+      get: { tags: ['Memberships'], summary: 'List memberships', ...secured(['ADMIN', 'RECEPTION', 'CLIENT']), parameters: [...paginationParameters, queryParameter('includeInactive', { type: 'boolean', default: false })], responses: success('MembershipListResponse') },
       post: { tags: ['Memberships'], summary: 'Create a membership', ...secured(['ADMIN', 'RECEPTION']), requestBody: jsonBody('CreateMembershipRequest'), responses: { ...success('MembershipResponse', '201'), '400': { $ref: '#/components/responses/BadRequest' }, '409': { $ref: '#/components/responses/Conflict' } } },
     },
     '/memberships/{id}': {
@@ -294,7 +312,7 @@ export const openapiDocument = {
       post: { tags: ['Memberships'], summary: 'Create a subscription', ...secured(['ADMIN', 'RECEPTION', 'CLIENT']), requestBody: jsonBody('CreateSubscriptionRequest'), responses: { ...success('SubscriptionWithCheckoutResponse', '201'), '400': { $ref: '#/components/responses/BadRequest' }, '404': { $ref: '#/components/responses/NotFound' }, '409': { $ref: '#/components/responses/Conflict' } } },
     },
     '/subscriptions': {
-      get: { tags: ['Subscriptions'], summary: 'List subscriptions', ...secured(['ADMIN', 'RECEPTION', 'CLIENT']), parameters: [queryParameter('clientId', { type: 'integer', minimum: 1 }), queryParameter('status', { $ref: '#/components/schemas/SubscriptionStatus' })], responses: success('SubscriptionListResponse') },
+      get: { tags: ['Subscriptions'], summary: 'List subscriptions', ...secured(['ADMIN', 'RECEPTION', 'CLIENT']), parameters: [...paginationParameters, queryParameter('clientId', { type: 'integer', minimum: 1 }), queryParameter('status', { $ref: '#/components/schemas/SubscriptionStatus' })], responses: success('SubscriptionListResponse') },
     },
     '/subscriptions/{id}': {
       parameters: [idParameter],
@@ -319,7 +337,7 @@ export const openapiDocument = {
       post: { tags: ['Attendance'], summary: 'Check out a client', ...secured(['ADMIN', 'RECEPTION', 'CLIENT']), responses: success('AttendanceResponse') },
     },
     '/routines': {
-      get: { tags: ['Routines'], summary: 'List routines', ...secured(), parameters: [queryParameter('includeInactive', { type: 'boolean', default: false })], responses: success('RoutineListResponse') },
+      get: { tags: ['Routines'], summary: 'List routines', ...secured(), parameters: [...paginationParameters, queryParameter('includeInactive', { type: 'boolean', default: false })], responses: success('RoutineListResponse') },
       post: { tags: ['Routines'], summary: 'Create a routine', ...secured(['ADMIN', 'COACH']), requestBody: jsonBody('CreateRoutineRequest'), responses: success('RoutineResponse', '201') },
     },
     '/routines/{id}': {
@@ -328,7 +346,7 @@ export const openapiDocument = {
       patch: { tags: ['Routines'], summary: 'Update a routine', ...secured(['ADMIN', 'COACH']), requestBody: jsonBody('UpdateRoutineRequest'), responses: success('RoutineResponse') },
     },
     '/routines/exercises': {
-      get: { tags: ['Routines'], summary: 'List exercises', ...secured(), responses: success('ExerciseListResponse') },
+      get: { tags: ['Routines'], summary: 'List exercises', ...secured(), parameters: paginationParameters, responses: success('ExerciseListResponse') },
       post: { tags: ['Routines'], summary: 'Create an exercise', ...secured(['ADMIN', 'COACH']), requestBody: jsonBody('CreateExerciseRequest'), responses: success('ExerciseResponse', '201') },
     },
     '/routines/exercises/{id}': {
@@ -337,7 +355,7 @@ export const openapiDocument = {
       patch: { tags: ['Routines'], summary: 'Update an exercise', ...secured(['ADMIN', 'COACH']), requestBody: jsonBody('UpdateExerciseRequest'), responses: success('ExerciseResponse') },
     },
     '/routines/assignments': {
-      get: { tags: ['Routines'], summary: 'List routine assignments', ...secured(), parameters: [queryParameter('clientId', { type: 'integer', minimum: 1 }), queryParameter('status', { type: 'string', enum: ['ACTIVE', 'COMPLETED', 'CANCELLED'] })], responses: success('AssignmentListResponse') },
+      get: { tags: ['Routines'], summary: 'List routine assignments', ...secured(), parameters: [...paginationParameters, queryParameter('clientId', { type: 'integer', minimum: 1 }), queryParameter('status', { type: 'string', enum: ['ACTIVE', 'COMPLETED', 'CANCELLED'] })], responses: success('AssignmentListResponse') },
       post: { tags: ['Routines'], summary: 'Assign a routine', ...secured(['ADMIN', 'COACH']), requestBody: jsonBody('CreateAssignmentRequest'), responses: success('AssignmentResponse', '201') },
     },
     '/routines/assignments/{id}': {
@@ -395,7 +413,7 @@ export const openapiDocument = {
       },
     },
     '/payments': {
-      get: { tags: ['Payments'], summary: 'List payments', ...secured(['ADMIN', 'RECEPTION']), parameters: [queryParameter('clientId', { type: 'integer', minimum: 1 }), queryParameter('subscriptionId', { type: 'integer', minimum: 1 }), queryParameter('method', { $ref: '#/components/schemas/PaymentMethod' }), queryParameter('status', { type: 'string', enum: ['PENDING', 'SUCCEEDED', 'FAILED', 'REFUNDED'] })], responses: success('PaymentListResponse') },
+      get: { tags: ['Payments'], summary: 'List payments', ...secured(['ADMIN', 'RECEPTION']), parameters: [...paginationParameters, queryParameter('clientId', { type: 'integer', minimum: 1 }), queryParameter('subscriptionId', { type: 'integer', minimum: 1 }), queryParameter('method', { $ref: '#/components/schemas/PaymentMethod' }), queryParameter('status', { type: 'string', enum: ['PENDING', 'SUCCEEDED', 'FAILED', 'REFUNDED'] })], responses: success('PaymentListResponse') },
     },
     '/payments/{id}': {
       parameters: [idParameter],
@@ -471,7 +489,7 @@ export const openapiDocument = {
           isActive: { type: 'boolean' }, createdAt: { type: 'string', format: 'date-time' },
         },
       },
-      ClientListResponse: { type: 'array', items: { $ref: '#/components/schemas/ClientResponse' } },
+      ClientListResponse: pageResponse('ClientResponse'),
       AttendancePageResponse: {
         type: 'object',
         required: ['items', 'page', 'limit', 'total'],
@@ -540,7 +558,7 @@ export const openapiDocument = {
           name: { type: 'string' }, lastName: { type: 'string' }, phone: { type: 'string' }, isActive: { type: 'boolean' },
         },
       },
-      CoachListResponse: { type: 'array', items: { $ref: '#/components/schemas/CoachResponse' } },
+      CoachListResponse: pageResponse('CoachResponse'),
       CreateCoachRequest: { type: 'object', required: ['email', 'dni', 'name', 'lastName', 'phone'], properties: { email: { type: 'string', format: 'email' }, dni: { type: 'string' }, name: { type: 'string' }, lastName: { type: 'string' }, phone: { type: 'string' } } },
       UpdateCoachRequest: { type: 'object', minProperties: 1, properties: { email: { type: 'string', format: 'email' }, dni: { type: 'string' }, name: { type: 'string' }, lastName: { type: 'string' }, phone: { type: 'string' } } },
       MembershipResponse: {
@@ -551,7 +569,7 @@ export const openapiDocument = {
           currency: { type: 'string' }, isActive: { type: 'boolean' }, stripePriceId: { type: 'string', nullable: true },
         },
       },
-      MembershipListResponse: { type: 'array', items: { $ref: '#/components/schemas/MembershipResponse' } },
+      MembershipListResponse: pageResponse('MembershipResponse'),
       CreateMembershipRequest: { type: 'object', required: ['name', 'durationDays', 'priceAmount'], properties: { name: { type: 'string' }, description: { type: 'string', nullable: true }, durationDays: { type: 'integer' }, maxDaysPerWeek: { type: 'integer', nullable: true }, priceAmount: { type: 'integer' }, currency: { type: 'string', minLength: 3, maxLength: 3 }, stripePriceId: { type: 'string', nullable: true } } },
       UpdateMembershipRequest: { type: 'object', minProperties: 1, properties: { name: { type: 'string' }, description: { type: 'string', nullable: true }, durationDays: { type: 'integer' }, maxDaysPerWeek: { type: 'integer', nullable: true }, priceAmount: { type: 'integer' } } },
       MembershipStatusRequest: { type: 'object', required: ['isActive'], properties: { isActive: { type: 'boolean' } }, additionalProperties: false },
@@ -560,21 +578,21 @@ export const openapiDocument = {
       CreateSubscriptionRequest: { type: 'object', required: ['clientId', 'membershipId', 'method'], properties: { clientId: { type: 'integer' }, membershipId: { type: 'integer' }, method: { $ref: '#/components/schemas/PaymentMethod' } }, additionalProperties: false },
       SubscriptionResponse: { type: 'object', required: ['id', 'clientId', 'membershipId', 'status', 'startDate', 'endDate', 'createdAt'], properties: { id: { type: 'integer' }, clientId: { type: 'integer' }, membershipId: { type: 'integer' }, status: { $ref: '#/components/schemas/SubscriptionStatus' }, startDate: { type: 'string', format: 'date-time', nullable: true }, endDate: { type: 'string', format: 'date-time', nullable: true }, createdAt: { type: 'string', format: 'date-time' } } },
       SubscriptionWithCheckoutResponse: { allOf: [{ $ref: '#/components/schemas/SubscriptionResponse' }, { type: 'object', required: ['checkoutUrl'], properties: { checkoutUrl: { type: 'string', format: 'uri', nullable: true } } }] },
-      SubscriptionListResponse: { type: 'array', items: { $ref: '#/components/schemas/SubscriptionResponse' } },
+      SubscriptionListResponse: pageResponse('SubscriptionResponse'),
       AttendanceResponse: { type: 'object', required: ['id', 'clientId', 'subscriptionId', 'checkInAt', 'checkOutAt', 'recordedById'], properties: { id: { type: 'integer' }, clientId: { type: 'integer' }, subscriptionId: { type: 'integer' }, checkInAt: { type: 'string', format: 'date-time' }, checkOutAt: { type: 'string', format: 'date-time', nullable: true }, recordedById: { type: 'integer', nullable: true } } },
       ExerciseResponse: { type: 'object', required: ['id', 'name', 'muscleGroup', 'equipment', 'description'], properties: { id: { type: 'integer' }, name: { type: 'string' }, muscleGroup: { type: 'string', enum: ['CHEST', 'BACK', 'SHOULDERS', 'ARMS', 'LEGS', 'GLUTES', 'CORE', 'CARDIO', 'FULL_BODY'] }, equipment: { type: 'string', nullable: true }, description: { type: 'string', nullable: true } } },
-      ExerciseListResponse: { type: 'array', items: { $ref: '#/components/schemas/ExerciseResponse' } },
+      ExerciseListResponse: pageResponse('ExerciseResponse'),
       CreateExerciseRequest: { type: 'object', required: ['name', 'muscleGroup'], properties: { name: { type: 'string' }, muscleGroup: { type: 'string', enum: ['CHEST', 'BACK', 'SHOULDERS', 'ARMS', 'LEGS', 'GLUTES', 'CORE', 'CARDIO', 'FULL_BODY'] }, equipment: { type: 'string', nullable: true }, description: { type: 'string', nullable: true } } },
       UpdateExerciseRequest: { type: 'object', minProperties: 1, properties: { name: { type: 'string' }, muscleGroup: { type: 'string', enum: ['CHEST', 'BACK', 'SHOULDERS', 'ARMS', 'LEGS', 'GLUTES', 'CORE', 'CARDIO', 'FULL_BODY'] }, equipment: { type: 'string', nullable: true }, description: { type: 'string', nullable: true } } },
       RoutineExerciseResponse: { type: 'object', required: ['id', 'routineId', 'exerciseId', 'dayNumber', 'position', 'sets', 'reps', 'weightKg', 'restSeconds', 'notes'], properties: { id: { type: 'integer' }, routineId: { type: 'integer' }, exerciseId: { type: 'integer' }, dayNumber: { type: 'integer' }, position: { type: 'integer' }, sets: { type: 'integer' }, reps: { type: 'integer' }, weightKg: { type: 'string', nullable: true }, restSeconds: { type: 'integer', nullable: true }, notes: { type: 'string', nullable: true }, exercise: { $ref: '#/components/schemas/ExerciseResponse' } } },
       RoutineResponse: { type: 'object', required: ['id', 'name', 'description', 'level', 'createdById', 'isActive', 'createdAt'], properties: { id: { type: 'integer' }, name: { type: 'string' }, description: { type: 'string', nullable: true }, level: { type: 'string', enum: ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'] }, createdById: { type: 'integer' }, isActive: { type: 'boolean' }, createdAt: { type: 'string', format: 'date-time' }, exercises: { type: 'array', items: { $ref: '#/components/schemas/RoutineExerciseResponse' } } } },
-      RoutineListResponse: { type: 'array', items: { $ref: '#/components/schemas/RoutineResponse' } },
+      RoutineListResponse: pageResponse('RoutineResponse'),
       CreateRoutineRequest: { type: 'object', required: ['name', 'level'], properties: { name: { type: 'string' }, description: { type: 'string', nullable: true }, level: { type: 'string', enum: ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'] }, createdById: { type: 'integer' }, exercises: { type: 'array', items: { $ref: '#/components/schemas/CreateRoutineExerciseRequest' } } } },
       UpdateRoutineRequest: { type: 'object', minProperties: 1, properties: { name: { type: 'string' }, description: { type: 'string', nullable: true }, level: { type: 'string', enum: ['BEGINNER', 'INTERMEDIATE', 'ADVANCED'] } } },
       CreateRoutineExerciseRequest: { type: 'object', required: ['exerciseId', 'dayNumber', 'position', 'sets', 'reps'], properties: { exerciseId: { type: 'integer' }, dayNumber: { type: 'integer' }, position: { type: 'integer' }, sets: { type: 'integer' }, reps: { type: 'integer' }, weightKg: { type: 'number', nullable: true }, restSeconds: { type: 'integer', nullable: true }, notes: { type: 'string', nullable: true } } },
       UpdateRoutineExerciseRequest: { type: 'object', properties: { exerciseId: { type: 'integer' }, dayNumber: { type: 'integer' }, position: { type: 'integer' }, sets: { type: 'integer' }, reps: { type: 'integer' }, weightKg: { type: 'number', nullable: true }, restSeconds: { type: 'integer', nullable: true }, notes: { type: 'string', nullable: true } }, minProperties: 1 },
       AssignmentResponse: { type: 'object', required: ['id', 'clientId', 'routineId', 'assignedById', 'status', 'startDate', 'endDate', 'notes'], properties: { id: { type: 'integer' }, clientId: { type: 'integer' }, routineId: { type: 'integer' }, assignedById: { type: 'integer' }, status: { type: 'string', enum: ['ACTIVE', 'COMPLETED', 'CANCELLED'] }, startDate: { type: 'string', format: 'date' }, endDate: { type: 'string', format: 'date', nullable: true }, notes: { type: 'string', nullable: true } } },
-      AssignmentListResponse: { type: 'array', items: { $ref: '#/components/schemas/AssignmentResponse' } },
+      AssignmentListResponse: pageResponse('AssignmentResponse'),
       CreateAssignmentRequest: { type: 'object', required: ['routineId', 'startDate'], properties: { clientId: { type: 'integer' }, routineId: { type: 'integer' }, assignedById: { type: 'integer' }, startDate: { type: 'string', format: 'date' }, endDate: { type: 'string', format: 'date', nullable: true }, notes: { type: 'string', nullable: true } } },
       AssignmentStatusRequest: { type: 'object', required: ['status'], properties: { status: { type: 'string', enum: ['COMPLETED', 'CANCELLED'] } }, additionalProperties: false },
       RoutineStatusRequest: { type: 'object', required: ['isActive'], properties: { isActive: { type: 'boolean' } }, additionalProperties: false },
@@ -586,7 +604,7 @@ export const openapiDocument = {
       ReportRequest: { type: 'object', required: ['reportType'], properties: { reportType: { type: 'string', enum: ['dashboard-summary'] }, from: { type: 'string', format: 'date' }, to: { type: 'string', format: 'date' }, timezone: { type: 'string' } }, additionalProperties: false },
       ReportRequestResponse: { type: 'object', required: ['jobId'], properties: { jobId: { type: 'string' } } },
       PaymentResponse: { type: 'object', required: ['id', 'clientId', 'subscriptionId', 'method', 'status', 'amount', 'currency', 'refundedAmount', 'receiptUrl', 'recordedById', 'paidAt', 'createdAt'], properties: { id: { type: 'integer' }, clientId: { type: 'integer' }, subscriptionId: { type: 'integer' }, method: { $ref: '#/components/schemas/PaymentMethod' }, status: { type: 'string', enum: ['PENDING', 'SUCCEEDED', 'FAILED', 'REFUNDED'] }, amount: { type: 'number' }, currency: { type: 'string' }, refundedAmount: { type: 'number' }, receiptUrl: { type: 'string', format: 'uri', nullable: true }, recordedById: { type: 'integer', nullable: true }, paidAt: { type: 'string', format: 'date-time', nullable: true }, createdAt: { type: 'string', format: 'date-time' } } },
-      PaymentListResponse: { type: 'array', items: { $ref: '#/components/schemas/PaymentResponse' } },
+      PaymentListResponse: pageResponse('PaymentResponse'),
       ErrorResponse: {
         type: 'object',
         required: ['error', 'code', 'requestId', 'timestamp', 'path'],

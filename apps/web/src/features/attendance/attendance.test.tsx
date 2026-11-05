@@ -156,17 +156,16 @@ function createHandler(options: HandlerOptions = {}) {
       return json({ items, page, limit, total })
     }
 
-    if (url.endsWith('/clients')) {
-      return json(clients)
+    if (url.endsWith('/clients') || url.includes('/clients?')) {
+      return json({ items: clients, page: 1, limit: 100, total: clients.length })
     }
 
     if (url.includes('/subscriptions')) {
       const clientId = Number(new URL(url).searchParams.get('clientId'))
-      return json(
-        Number.isInteger(clientId)
-          ? subscriptions.filter((subscription) => subscription.clientId === clientId)
-          : subscriptions,
-      )
+      const filtered = Number.isInteger(clientId)
+        ? subscriptions.filter((subscription) => subscription.clientId === clientId)
+        : subscriptions
+      return json({ items: filtered, page: 1, limit: 100, total: filtered.length })
     }
 
     if (/\/memberships\/\d+$/.test(url)) {
@@ -174,7 +173,7 @@ function createHandler(options: HandlerOptions = {}) {
     }
 
     if (url.includes('/memberships')) {
-      return json(memberships)
+      return json({ items: memberships, page: 1, limit: 100, total: memberships.length })
     }
 
     return json({ error: 'not found' }, 404)

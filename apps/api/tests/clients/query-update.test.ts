@@ -41,7 +41,12 @@ function createRepository(includeDuplicate = false): ClientsRepository {
     findByEmail: async (email) => clients.find((client) => client.email === email) ?? null,
     findByDni: async (dni) => clients.find((client) => client.dni === dni) ?? null,
     create: async () => clients[0] as Client,
-    getClients: async () => clients,
+    getClients: async (query) => ({
+      items: clients,
+      page: query.page,
+      limit: query.limit,
+      total: clients.length,
+    }),
     getClient: async (id) => clients.find((client) => client.id === id) ?? null,
     updateClient: async (id, input) => {
       const index = clients.findIndex((client) => client.id === id)
@@ -100,11 +105,15 @@ test('client mutations reject unauthorized roles', async () => {
   assert.equal(response.status, 403)
 })
 
-test('GET /clients returns an array of clients', async () => {
+test('GET /clients returns a paginated collection of clients', async () => {
   const response = await request('/clients')
 
   assert.equal(response.status, 200)
-  assert.equal((await response.json()).length, 1)
+  const body = await response.json()
+  assert.equal(body.items.length, 1)
+  assert.equal(body.total, 1)
+  assert.equal(body.page, 1)
+  assert.equal(body.limit, 20)
 })
 
 test('GET /clients/:id returns the requested client', async () => {

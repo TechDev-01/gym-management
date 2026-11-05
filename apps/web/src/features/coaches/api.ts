@@ -1,8 +1,9 @@
 import { request } from '../../lib/http'
+import { requestAllPages } from '../../lib/http/pagination'
 import type { Coach, CoachInput, CoachSchedule, CoachScheduleInput } from './types'
 
 export function getCoaches(): Promise<Coach[]> {
-  return request<Coach[]>('coaches')
+  return requestAllPages<Coach>('coaches')
 }
 
 export function getCoach(id: number): Promise<Coach> {

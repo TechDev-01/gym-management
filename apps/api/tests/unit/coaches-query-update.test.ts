@@ -34,7 +34,12 @@ function repository(initialCoach: Coach | null = coach()): CoachesRepository {
 
   return {
     getModuleName: () => 'coaches',
-    getCoaches: async () => (currentCoach ? [currentCoach] : []),
+    getCoaches: async (query) => ({
+      items: currentCoach ? [currentCoach] : [],
+      page: query.page,
+      limit: query.limit,
+      total: currentCoach ? 1 : 0,
+    }),
     getCoach: async () => currentCoach,
     findByEmail: async (email) =>
       currentCoach?.email === email ? currentCoach : null,
@@ -53,8 +58,8 @@ test('getCoaches returns all coaches', async () => {
 
   const result = await service.getCoaches()
 
-  assert.equal(result.length, 1)
-  assert.equal(result[0]?.email, 'ana@example.com')
+  assert.equal(result.items.length, 1)
+  assert.equal(result.items[0]?.email, 'ana@example.com')
 })
 
 test('updateCoach updates allowed fields', async () => {
@@ -142,7 +147,9 @@ test('GET /coaches returns 200 with the coaches', async () => {
   const response = await request('/coaches')
 
   assert.equal(response.status, 200)
-  assert.equal((await response.json())[0].id, 1)
+  const body = await response.json()
+  assert.equal(body.items[0].id, 1)
+  assert.equal(body.total, 1)
 })
 
 test('GET /coaches/:id returns 200 with the requested coach', async () => {

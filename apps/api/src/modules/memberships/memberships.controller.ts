@@ -3,7 +3,6 @@ import type { MembershipsService } from './memberships.service.js'
 import {
   membershipIdSchema,
   subscriptionIdSchema,
-  subscriptionQuerySchema,
 } from './memberships.schema.js'
 
 export class MembershipsController {
@@ -11,7 +10,7 @@ export class MembershipsController {
 
   listMemberships = async (request: Request, response: Response, next: NextFunction): Promise<void> => {
     try {
-      response.json(await this.service.listMemberships(request.query.includeInactive === 'true'))
+      response.json(await this.service.listMemberships(request.query))
     } catch (error: unknown) { next(error) }
   }
 
@@ -54,8 +53,7 @@ export class MembershipsController {
 
   listSubscriptions = async (request: Request, response: Response, next: NextFunction): Promise<void> => {
     try {
-      const query = subscriptionQuerySchema.parse(request.query)
-      response.json(await this.service.listSubscriptions(query, request.user!))
+      response.json(await this.service.listSubscriptions(request.query, request.user!))
     } catch (error: unknown) { next(error) }
   }
 

@@ -1,9 +1,12 @@
 import type { CoachesRepository } from './coaches.repository.js'
 import { ConflictError } from '../../shared/errors/conflict.error.js'
 import { NotFoundError } from '../../shared/errors/not-found.error.js'
+import type { Page } from '../../shared/pagination.js'
+import { toPage } from '../../shared/pagination.js'
 import {
   coachIdSchema,
   coachesHealthSchema,
+  coachesQuerySchema,
   createCoachSchema,
   updateCoachSchema,
 } from './coaches.schema.js'
@@ -35,9 +38,10 @@ export class CoachesService {
     return this.toCoachResponse(coach)
   }
 
-  async getCoaches(): Promise<CoachResponse[]> {
-    const coaches = await this.coachesRepository.getCoaches()
-    return coaches.map((coach) => this.toCoachResponse(coach))
+  async getCoaches(input: unknown = {}): Promise<Page<CoachResponse>> {
+    const query = coachesQuerySchema.parse(input)
+    const result = await this.coachesRepository.getCoaches(query)
+    return toPage(result.items.map((coach) => this.toCoachResponse(coach)), result.total, query)
   }
 
   async getCoach(inputId: unknown): Promise<CoachResponse> {

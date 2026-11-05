@@ -2,9 +2,12 @@ import bcrypt from 'bcrypt'
 import type { ClientsRepository } from './clients.repository.js'
 import { ConflictError } from '../../shared/errors/conflict.error.js'
 import { NotFoundError } from '../../shared/errors/not-found.error.js'
+import type { Page } from '../../shared/pagination.js'
+import { toPage } from '../../shared/pagination.js'
 import {
   clientIdSchema,
   clientsHealthSchema,
+  clientsQuerySchema,
   createClientSchema,
   updateClientSchema,
 } from './clients.schema.js'
@@ -45,9 +48,10 @@ export class ClientsService {
     return this.toClientResponse(client)
   }
 
-  async getClients(): Promise<ClientResponse[]> {
-    const clients = await this.clientsRepository.getClients()
-    return clients.map((client) => this.toClientResponse(client))
+  async getClients(input: unknown = {}): Promise<Page<ClientResponse>> {
+    const query = clientsQuerySchema.parse(input)
+    const result = await this.clientsRepository.getClients(query)
+    return toPage(result.items.map((client) => this.toClientResponse(client)), result.total, query)
   }
 
   async getClient(inputId: unknown): Promise<ClientResponse> {

@@ -69,6 +69,7 @@ export interface paths {
                 };
                 400: components["responses"]["BadRequest"];
                 401: components["responses"]["Unauthorized"];
+                429: components["responses"]["TooManyRequests"];
             };
         };
         delete?: never;
@@ -172,7 +173,10 @@ export interface paths {
          */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    limit?: number;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -222,6 +226,7 @@ export interface paths {
                 400: components["responses"]["BadRequest"];
                 401: components["responses"]["Unauthorized"];
                 403: components["responses"]["Forbidden"];
+                409: components["responses"]["Conflict"];
             };
         };
         delete?: never;
@@ -265,6 +270,7 @@ export interface paths {
                 };
                 401: components["responses"]["Unauthorized"];
                 403: components["responses"]["Forbidden"];
+                404: components["responses"]["NotFound"];
             };
         };
         put?: never;
@@ -357,7 +363,10 @@ export interface paths {
          */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    limit?: number;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -404,8 +413,10 @@ export interface paths {
                         "application/json": components["schemas"]["CoachResponse"];
                     };
                 };
+                400: components["responses"]["BadRequest"];
                 401: components["responses"]["Unauthorized"];
                 403: components["responses"]["Forbidden"];
+                409: components["responses"]["Conflict"];
             };
         };
         delete?: never;
@@ -449,6 +460,7 @@ export interface paths {
                 };
                 401: components["responses"]["Unauthorized"];
                 403: components["responses"]["Forbidden"];
+                404: components["responses"]["NotFound"];
             };
         };
         put?: never;
@@ -484,8 +496,11 @@ export interface paths {
                         "application/json": components["schemas"]["CoachResponse"];
                     };
                 };
+                400: components["responses"]["BadRequest"];
                 401: components["responses"]["Unauthorized"];
                 403: components["responses"]["Forbidden"];
+                404: components["responses"]["NotFound"];
+                409: components["responses"]["Conflict"];
             };
         };
         trace?: never;
@@ -665,6 +680,8 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
+                    page?: number;
+                    limit?: number;
                     includeInactive?: boolean;
                 };
                 header?: never;
@@ -711,6 +728,8 @@ export interface paths {
                         "application/json": components["schemas"]["MembershipResponse"];
                     };
                 };
+                400: components["responses"]["BadRequest"];
+                409: components["responses"]["Conflict"];
             };
         };
         delete?: never;
@@ -752,6 +771,7 @@ export interface paths {
                         "application/json": components["schemas"]["MembershipResponse"];
                     };
                 };
+                404: components["responses"]["NotFound"];
             };
         };
         put?: never;
@@ -787,6 +807,9 @@ export interface paths {
                         "application/json": components["schemas"]["MembershipResponse"];
                     };
                 };
+                400: components["responses"]["BadRequest"];
+                404: components["responses"]["NotFound"];
+                409: components["responses"]["Conflict"];
             };
         };
         trace?: never;
@@ -834,6 +857,8 @@ export interface paths {
                         "application/json": components["schemas"]["MembershipResponse"];
                     };
                 };
+                400: components["responses"]["BadRequest"];
+                404: components["responses"]["NotFound"];
             };
         };
         trace?: never;
@@ -877,6 +902,9 @@ export interface paths {
                         "application/json": components["schemas"]["SubscriptionWithCheckoutResponse"];
                     };
                 };
+                400: components["responses"]["BadRequest"];
+                404: components["responses"]["NotFound"];
+                409: components["responses"]["Conflict"];
             };
         };
         delete?: never;
@@ -899,6 +927,8 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
+                    page?: number;
+                    limit?: number;
                     clientId?: number;
                     status?: components["schemas"]["SubscriptionStatus"];
                 };
@@ -960,6 +990,7 @@ export interface paths {
                         "application/json": components["schemas"]["SubscriptionResponse"];
                     };
                 };
+                404: components["responses"]["NotFound"];
             };
         };
         put?: never;
@@ -1005,6 +1036,8 @@ export interface paths {
                         "application/json": components["schemas"]["SubscriptionResponse"];
                     };
                 };
+                404: components["responses"]["NotFound"];
+                409: components["responses"]["Conflict"];
             };
         };
         delete?: never;
@@ -1048,6 +1081,8 @@ export interface paths {
                         "application/json": components["schemas"]["SubscriptionResponse"];
                     };
                 };
+                404: components["responses"]["NotFound"];
+                409: components["responses"]["Conflict"];
             };
         };
         delete?: never;
@@ -1199,6 +1234,8 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
+                    page?: number;
+                    limit?: number;
                     includeInactive?: boolean;
                 };
                 header?: never;
@@ -1332,7 +1369,10 @@ export interface paths {
         /** List exercises */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    page?: number;
+                    limit?: number;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -1465,6 +1505,8 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
+                    page?: number;
+                    limit?: number;
                     clientId?: number;
                     status?: "ACTIVE" | "COMPLETED" | "CANCELLED";
                 };
@@ -2027,6 +2069,8 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
+                    page?: number;
+                    limit?: number;
                     clientId?: number;
                     subscriptionId?: number;
                     method?: components["schemas"]["PaymentMethod"];
@@ -2090,6 +2134,7 @@ export interface paths {
                         "application/json": components["schemas"]["PaymentResponse"];
                     };
                 };
+                404: components["responses"]["NotFound"];
             };
         };
         put?: never;
@@ -2109,7 +2154,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Receive Stripe webhook events */
+        /**
+         * Receive Stripe webhook events
+         * @description Requires the Stripe-Signature header. The raw request body is verified before processing.
+         */
         post: {
             parameters: {
                 query?: never;
@@ -2133,6 +2181,8 @@ export interface paths {
                     content?: never;
                 };
                 400: components["responses"]["BadRequest"];
+                409: components["responses"]["Conflict"];
+                502: components["responses"]["BadGateway"];
             };
         };
         delete?: never;
@@ -2221,7 +2271,12 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
         };
-        ClientListResponse: components["schemas"]["ClientResponse"][];
+        ClientListResponse: {
+            items: components["schemas"]["ClientResponse"][];
+            page: number;
+            limit: number;
+            total: number;
+        };
         AttendancePageResponse: {
             items: components["schemas"]["AttendanceResponse"][];
             page: number;
@@ -2271,7 +2326,12 @@ export interface components {
             phone: string;
             isActive: boolean;
         };
-        CoachListResponse: components["schemas"]["CoachResponse"][];
+        CoachListResponse: {
+            items: components["schemas"]["CoachResponse"][];
+            page: number;
+            limit: number;
+            total: number;
+        };
         CreateCoachRequest: {
             /** Format: email */
             email: string;
@@ -2299,7 +2359,12 @@ export interface components {
             isActive: boolean;
             stripePriceId: string | null;
         };
-        MembershipListResponse: components["schemas"]["MembershipResponse"][];
+        MembershipListResponse: {
+            items: components["schemas"]["MembershipResponse"][];
+            page: number;
+            limit: number;
+            total: number;
+        };
         CreateMembershipRequest: {
             name: string;
             description?: string | null;
@@ -2344,7 +2409,12 @@ export interface components {
             /** Format: uri */
             checkoutUrl: string | null;
         };
-        SubscriptionListResponse: components["schemas"]["SubscriptionResponse"][];
+        SubscriptionListResponse: {
+            items: components["schemas"]["SubscriptionResponse"][];
+            page: number;
+            limit: number;
+            total: number;
+        };
         AttendanceResponse: {
             id: number;
             clientId: number;
@@ -2363,7 +2433,12 @@ export interface components {
             equipment: string | null;
             description: string | null;
         };
-        ExerciseListResponse: components["schemas"]["ExerciseResponse"][];
+        ExerciseListResponse: {
+            items: components["schemas"]["ExerciseResponse"][];
+            page: number;
+            limit: number;
+            total: number;
+        };
         CreateExerciseRequest: {
             name: string;
             /** @enum {string} */
@@ -2403,7 +2478,12 @@ export interface components {
             createdAt: string;
             exercises?: components["schemas"]["RoutineExerciseResponse"][];
         };
-        RoutineListResponse: components["schemas"]["RoutineResponse"][];
+        RoutineListResponse: {
+            items: components["schemas"]["RoutineResponse"][];
+            page: number;
+            limit: number;
+            total: number;
+        };
         CreateRoutineRequest: {
             name: string;
             description?: string | null;
@@ -2451,7 +2531,12 @@ export interface components {
             endDate: string | null;
             notes: string | null;
         };
-        AssignmentListResponse: components["schemas"]["AssignmentResponse"][];
+        AssignmentListResponse: {
+            items: components["schemas"]["AssignmentResponse"][];
+            page: number;
+            limit: number;
+            total: number;
+        };
         CreateAssignmentRequest: {
             clientId?: number;
             routineId: number;
@@ -2567,9 +2652,26 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
         };
-        PaymentListResponse: components["schemas"]["PaymentResponse"][];
+        PaymentListResponse: {
+            items: components["schemas"]["PaymentResponse"][];
+            page: number;
+            limit: number;
+            total: number;
+        };
         ErrorResponse: {
             error: string;
+            /** @description Stable machine-readable error code */
+            code: string;
+            requestId: string;
+            /** Format: date-time */
+            timestamp: string;
+            path: string;
+            /** @description Optional structured error details */
+            details?: unknown;
+            /** @description Validation issues (deprecated alias of details) */
+            issues?: {
+                [key: string]: unknown;
+            }[];
         };
     };
     responses: {
@@ -2611,6 +2713,26 @@ export interface components {
         };
         /** @description Resource conflict */
         Conflict: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description Rate limit exceeded */
+        TooManyRequests: {
+            headers: {
+                /** @description Seconds to wait before retrying */
+                "Retry-After"?: number;
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description Upstream payment provider error */
+        BadGateway: {
             headers: {
                 [name: string]: unknown;
             };

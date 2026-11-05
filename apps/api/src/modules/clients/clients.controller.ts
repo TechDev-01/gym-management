@@ -22,12 +22,12 @@ export class ClientsController {
   }
 
   getClients = async (
-    _request: Request,
+    request: Request,
     response: Response,
     next: NextFunction,
   ): Promise<void> => {
     try {
-      response.status(200).json(await this.clientsService.getClients())
+      response.status(200).json(await this.clientsService.getClients(request.query))
     } catch (error: unknown) {
       next(error)
     }

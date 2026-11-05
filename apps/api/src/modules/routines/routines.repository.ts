@@ -1,4 +1,5 @@
 import type { EntityManager, Repository } from 'typeorm'
+import type { Page, PaginationQuery } from '../../shared/pagination.js'
 import { Client } from '../clients/client.entity.js'
 import { Coach } from '../coaches/coach.entity.js'
 import { ClientRoutine } from './client-routine.entity.js'
@@ -21,11 +22,11 @@ import type {
 export interface RoutinesRepository {
   findExercise(id: number): Promise<Exercise | null>
   findExerciseByName(name: string): Promise<Exercise | null>
-  listExercises(): Promise<Exercise[]>
+  listExercises(query: PaginationQuery): Promise<Page<Exercise>>
   createExercise(input: CreateExerciseInput): Promise<Exercise>
   updateExercise(id: number, input: UpdateExerciseInput): Promise<Exercise>
   findRoutine(id: number): Promise<Routine | null>
-  listRoutines(filters: RoutineFilters): Promise<Routine[]>
+  listRoutines(filters: RoutineFilters): Promise<Page<Routine>>
   createRoutine(input: CreateRoutineInput, coachId: number): Promise<Routine>
   updateRoutine(id: number, input: UpdateRoutineInput): Promise<Routine>
   setRoutineActive(id: number, isActive: boolean): Promise<Routine>
@@ -37,7 +38,7 @@ export interface RoutinesRepository {
   findCoach(id: number): Promise<Coach | null>
   findAssignment(id: number): Promise<ClientRoutine | null>
   findActiveAssignment(clientId: number): Promise<ClientRoutine | null>
-  listAssignments(filters: AssignmentFilters): Promise<ClientRoutine[]>
+  listAssignments(filters: AssignmentFilters): Promise<Page<ClientRoutine>>
   createAssignment(input: CreateAssignmentInput & { assignedById: number; clientId: number }): Promise<ClientRoutine>
   updateAssignmentStatus(id: number, status: AssignmentStatus, endDate: string | null): Promise<ClientRoutine>
   withTransaction<T>(work: (repository: RoutinesRepository) => Promise<T>): Promise<T>
@@ -72,8 +73,13 @@ export class TypeOrmRoutinesRepository implements RoutinesRepository {
     return this.exerciseRepository.findOneBy({ name })
   }
 
-  listExercises(): Promise<Exercise[]> {
-    return this.exerciseRepository.find({ order: { name: 'ASC' } })
+  async listExercises(query: PaginationQuery): Promise<Page<Exercise>> {
+    const [items, total] = await this.exerciseRepository.findAndCount({
+      order: { name: 'ASC' },
+      skip: (query.page - 1) * query.limit,
+      take: query.limit,
+    })
+    return { items, page: query.page, limit: query.limit, total }
   }
 
   createExercise(input: CreateExerciseInput): Promise<Exercise> {
@@ -94,15 +100,18 @@ export class TypeOrmRoutinesRepository implements RoutinesRepository {
     })
   }
 
-  listRoutines(filters: RoutineFilters): Promise<Routine[]> {
-    return this.routineRepository.find({
+  async listRoutines(filters: RoutineFilters): Promise<Page<Routine>> {
+    const [items, total] = await this.routineRepository.findAndCount({
       where: {
         ...(filters.includeInactive ? {} : { isActive: true }),
         ...(filters.coachId ? { createdById: filters.coachId } : {}),
       },
       relations: { creator: true, exercises: { exercise: true } },
       order: { id: 'ASC' },
+      skip: (filters.page - 1) * filters.limit,
+      take: filters.limit,
     })
+    return { items, page: filters.page, limit: filters.limit, total }
   }
 
   async createRoutine(input: CreateRoutineInput, coachId: number): Promise<Routine> {
@@ -190,15 +199,18 @@ export class TypeOrmRoutinesRepository implements RoutinesRepository {
     return this.assignmentRepository.findOneBy({ clientId, status: AssignmentStatus.ACTIVE })
   }
 
-  listAssignments(filters: AssignmentFilters): Promise<ClientRoutine[]> {
-    return this.assignmentRepository.find({
+  async listAssignments(filters: AssignmentFilters): Promise<Page<ClientRoutine>> {
+    const [items, total] = await this.assignmentRepository.findAndCount({
       where: {
         ...(filters.clientId ? { clientId: filters.clientId } : {}),
         ...(filters.status ? { status: filters.status } : {}),
       },
       relations: { client: true, routine: true, assignedBy: true },
       order: { startDate: 'DESC', id: 'DESC' },
+      skip: (filters.page - 1) * filters.limit,
+      take: filters.limit,
     })
+    return { items, page: filters.page, limit: filters.limit, total }
   }
 
   createAssignment(input: CreateAssignmentInput & { assignedById: number; clientId: number }): Promise<ClientRoutine> {

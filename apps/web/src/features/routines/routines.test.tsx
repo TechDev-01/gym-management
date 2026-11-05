@@ -119,11 +119,11 @@ function createHandler(options: HandlerOptions = {}) {
     }
 
     if (url.includes('/routines/assignments')) {
-      return json(assignments)
+      return json({ items: assignments, page: 1, limit: 100, total: assignments.length })
     }
 
     if (url.includes('/routines/exercises')) {
-      return json([exercise])
+      return json({ items: [exercise], page: 1, limit: 100, total: 1 })
     }
 
     if (/\/routines\/\d+$/.test(url)) {
@@ -131,15 +131,15 @@ function createHandler(options: HandlerOptions = {}) {
     }
 
     if (url.includes('/routines')) {
-      return json([routine])
+      return json({ items: [routine], page: 1, limit: 100, total: 1 })
     }
 
-    if (url.endsWith('/clients')) {
-      return json([client])
+    if (url.endsWith('/clients') || url.includes('/clients?')) {
+      return json({ items: [client], page: 1, limit: 100, total: 1 })
     }
 
-    if (url.endsWith('/coaches')) {
-      return json([coach])
+    if (url.endsWith('/coaches') || url.includes('/coaches?')) {
+      return json({ items: [coach], page: 1, limit: 100, total: 1 })
     }
 
     return json({ error: 'not found' }, 404)

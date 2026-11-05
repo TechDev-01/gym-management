@@ -51,7 +51,12 @@ function coachesRepository(exists = true): CoachesRepository {
   return {
     getModuleName: () => 'coaches',
     create: async () => makeCoach(),
-    getCoaches: async () => [makeCoach()],
+    getCoaches: async (query) => ({
+      items: [makeCoach()],
+      page: query.page,
+      limit: query.limit,
+      total: 1,
+    }),
     getCoach: async () => (exists ? makeCoach() : null),
     updateCoaches: async () => makeCoach(),
     findByEmail: async () => null,

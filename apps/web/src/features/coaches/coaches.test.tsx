@@ -107,8 +107,8 @@ function coachesHandler(url: string, init?: RequestInit): Response {
     return json({ ...coaches[0], id: 3, email: 'nuevo@example.com' }, 201)
   }
 
-  if (url.endsWith('/coaches')) {
-    return json(coaches)
+  if (url.endsWith('/coaches') || url.includes('/coaches?')) {
+    return json({ items: coaches, page: 1, limit: 100, total: coaches.length })
   }
 
   return json({ error: 'not found' }, 404)

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { paginationSchema } from '../../shared/pagination.js'
 import { PaymentMethod } from '../payments/payment.entity.js'
 import { SubscriptionStatus } from './subscription.entity.js'
 
@@ -40,7 +41,11 @@ export const subscriptionIdSchema = z.object({
   id: z.coerce.number().int().positive(),
 }).strict()
 
-export const subscriptionQuerySchema = z.object({
+export const subscriptionQuerySchema = paginationSchema.extend({
   clientId: z.coerce.number().int().positive().optional(),
   status: z.nativeEnum(SubscriptionStatus).optional(),
+}).strict()
+
+export const membershipQuerySchema = paginationSchema.extend({
+  includeInactive: z.enum(['true', 'false']).transform((value) => value === 'true').default(false),
 }).strict()

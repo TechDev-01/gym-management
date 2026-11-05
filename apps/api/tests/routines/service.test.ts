@@ -23,11 +23,21 @@ function repository(overrides: Partial<RoutinesRepository> = {}): RoutinesReposi
   return {
     findExercise: async () => ({ id: 2 } as Exercise),
     findExerciseByName: async () => null,
-    listExercises: async () => [],
+    listExercises: async (query) => ({
+      items: [],
+      page: query.page,
+      limit: query.limit,
+      total: 0,
+    }),
     createExercise: async (input) => ({ id: 2, ...input } as Exercise),
     updateExercise: async (id, input) => ({ id, ...input } as Exercise),
     findRoutine: async () => routine(),
-    listRoutines: async () => [routine()],
+    listRoutines: async (filters) => ({
+      items: [routine()],
+      page: filters.page,
+      limit: filters.limit,
+      total: 1,
+    }),
     createRoutine: async (input, coachId) => routine({ ...input, createdById: coachId }),
     updateRoutine: async (id, input) => routine({ id, ...input }),
     setRoutineActive: async (id, isActive) => routine({ id, isActive }),
@@ -39,7 +49,12 @@ function repository(overrides: Partial<RoutinesRepository> = {}): RoutinesReposi
     findCoach: async () => ({ id: 3, isActive: true } as Coach),
     findAssignment: async () => assignment(),
     findActiveAssignment: async () => null,
-    listAssignments: async () => [assignment()],
+    listAssignments: async (filters) => ({
+      items: [assignment()],
+      page: filters.page,
+      limit: filters.limit,
+      total: 1,
+    }),
     createAssignment: async (input) => assignment(input),
     updateAssignmentStatus: async (id, status, endDate) => assignment({ id, status, endDate }),
     withTransaction: async (work) => work(repository()),
@@ -78,7 +93,12 @@ test('a client can only list its own assignments', async () => {
   const service = new RoutinesService(repository({
     listAssignments: async (filters) => {
       requestedClientId = filters.clientId
-      return []
+      return {
+        items: [],
+        page: filters.page,
+        limit: filters.limit,
+        total: 0,
+      }
     },
   }))
 

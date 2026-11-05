@@ -1,4 +1,5 @@
 import { request } from '../../lib/http'
+import { requestAllPages } from '../../lib/http/pagination'
 
 export type SubscriptionStatus = 'PENDING' | 'ACTIVE' | 'EXPIRED' | 'CANCELLED'
 
@@ -56,7 +57,7 @@ function buildPath(path: string, params: Record<string, string | number>): strin
 }
 
 export function getClientSubscriptions(clientId: number): Promise<ClientSubscription[]> {
-  return request<ClientSubscription[]>(buildPath('subscriptions', { clientId }))
+  return requestAllPages<ClientSubscription>('subscriptions', { clientId })
 }
 
 export function getClientAttendance(

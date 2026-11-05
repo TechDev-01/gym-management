@@ -29,11 +29,15 @@ export interface CreateSubscriptionInput {
 
 export interface MembershipFilters {
   includeInactive: boolean
+  page: number
+  limit: number
 }
 
 export interface SubscriptionFilters {
   clientId?: number
   status?: SubscriptionStatus
+  page: number
+  limit: number
 }
 
 export interface MembershipResponse {

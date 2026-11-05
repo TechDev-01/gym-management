@@ -57,7 +57,12 @@ function createRepository(overrides: Partial<PaymentsServiceRepository> = {}): P
       durationDays: 30,
     } as Membership),
     findById: async () => createPayment(),
-    listPayments: async () => [createPayment()],
+    listPayments: async (filters) => ({
+      items: [createPayment()],
+      page: filters.page,
+      limit: filters.limit,
+      total: 1,
+    }),
     findByStripePaymentIntentId: async () => createPayment(),
     updatePayment: async () => {},
     activateSubscription: async () => {},
@@ -159,19 +164,29 @@ test('lists payments with filters and hides Stripe identifiers', async () => {
   const repository = createRepository({
     listPayments: async (filters) => {
       receivedFilters.push(filters)
-      return [createPayment({ status: PaymentStatus.SUCCEEDED, paidAt: new Date('2026-10-28T10:00:00Z') })]
+      return {
+        items: [createPayment({ status: PaymentStatus.SUCCEEDED, paidAt: new Date('2026-10-28T10:00:00Z') })],
+        page: filters.page,
+        limit: filters.limit,
+        total: 1,
+      }
     },
   })
   const service = new PaymentsService(repository, stripeGateway)
 
   const payments = await service.listPayments({ status: 'SUCCEEDED', clientId: '7' })
 
-  assert.deepEqual(receivedFilters[0], { status: PaymentStatus.SUCCEEDED, clientId: 7 })
-  assert.equal(payments.length, 1)
-  assert.equal(payments[0]?.status, PaymentStatus.SUCCEEDED)
-  assert.equal(payments[0]?.method, PaymentMethod.CASH)
-  assert.equal('stripeCheckoutSessionId' in (payments[0] ?? {}), false)
-  assert.equal('stripePaymentIntentId' in (payments[0] ?? {}), false)
+  assert.deepEqual(receivedFilters[0], {
+    status: PaymentStatus.SUCCEEDED,
+    clientId: 7,
+    page: 1,
+    limit: 20,
+  })
+  assert.equal(payments.items.length, 1)
+  assert.equal(payments.items[0]?.status, PaymentStatus.SUCCEEDED)
+  assert.equal(payments.items[0]?.method, PaymentMethod.CASH)
+  assert.equal('stripeCheckoutSessionId' in (payments.items[0] ?? {}), false)
+  assert.equal('stripePaymentIntentId' in (payments.items[0] ?? {}), false)
 })
 
 test('returns a payment by id and rejects missing payments', async () => {

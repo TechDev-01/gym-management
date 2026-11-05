@@ -1,4 +1,5 @@
-import type { EntityManager, Repository } from 'typeorm'
+import type { EntityManager, FindOptionsWhere, Repository } from 'typeorm'
+import type { Page } from '../../shared/pagination.js'
 import { Client } from '../clients/client.entity.js'
 import { Membership } from './membership.entity.js'
 import { Subscription, SubscriptionStatus } from './subscription.entity.js'
@@ -13,7 +14,7 @@ import type {
 export interface MembershipsRepository {
   findMembershipById(id: number): Promise<Membership | null>
   findMembershipByName(name: string): Promise<Membership | null>
-  listMemberships(filters: MembershipFilters): Promise<Membership[]>
+  listMemberships(filters: MembershipFilters): Promise<Page<Membership>>
   countMembershipSubscriptions(id: number): Promise<number>
   createMembership(input: CreateMembershipInput): Promise<Membership>
   updateMembership(id: number, input: UpdateMembershipInput): Promise<Membership>
@@ -21,7 +22,7 @@ export interface MembershipsRepository {
   findClientById(id: number): Promise<Client | null>
   findSubscriptionById(id: number): Promise<Subscription | null>
   listActiveSubscriptionsEndingOn(endDate: string): Promise<Subscription[]>
-  listSubscriptions(filters: SubscriptionFilters): Promise<Subscription[]>
+  listSubscriptions(filters: SubscriptionFilters): Promise<Page<Subscription>>
   findClientSubscription(clientId: number, status: SubscriptionStatus): Promise<Subscription | null>
   createSubscription(input: CreateSubscriptionInput): Promise<Subscription>
   cancelSubscription(id: number): Promise<Subscription>
@@ -54,11 +55,14 @@ export class TypeOrmMembershipsRepository implements MembershipsRepository {
     return this.membershipRepository.findOneBy({ name })
   }
 
-  listMemberships(filters: MembershipFilters): Promise<Membership[]> {
-    return this.membershipRepository.find({
+  async listMemberships(filters: MembershipFilters): Promise<Page<Membership>> {
+    const [items, total] = await this.membershipRepository.findAndCount({
       where: filters.includeInactive ? {} : { isActive: true },
       order: { id: 'ASC' },
+      skip: (filters.page - 1) * filters.limit,
+      take: filters.limit,
     })
+    return { items, page: filters.page, limit: filters.limit, total }
   }
 
   countMembershipSubscriptions(id: number): Promise<number> {
@@ -100,11 +104,19 @@ export class TypeOrmMembershipsRepository implements MembershipsRepository {
     })
   }
 
-  listSubscriptions(filters: SubscriptionFilters): Promise<Subscription[]> {
-    return this.subscriptionRepository.find({
-      where: filters,
+  async listSubscriptions(filters: SubscriptionFilters): Promise<Page<Subscription>> {
+    const where: FindOptionsWhere<Subscription> = {}
+
+    if (filters.clientId !== undefined) { where.clientId = filters.clientId }
+    if (filters.status !== undefined) { where.status = filters.status }
+
+    const [items, total] = await this.subscriptionRepository.findAndCount({
+      where,
       order: { createdAt: 'DESC' },
+      skip: (filters.page - 1) * filters.limit,
+      take: filters.limit,
     })
+    return { items, page: filters.page, limit: filters.limit, total }
   }
 
   findClientSubscription(clientId: number, status: SubscriptionStatus): Promise<Subscription | null> {

@@ -3,6 +3,8 @@ import type { EntityManager } from 'typeorm'
 import { ConflictError } from '../../shared/errors/conflict.error.js'
 import { NotFoundError } from '../../shared/errors/not-found.error.js'
 import { PaymentGatewayError } from '../../shared/errors/payment-gateway.error.js'
+import type { Page } from '../../shared/pagination.js'
+import { toPage } from '../../shared/pagination.js'
 import type { CheckoutSessionInput, PaymentGateway, PendingPaymentInput } from '../memberships/types.js'
 import { PaymentStatus } from './payment.entity.js'
 import type { StripeGateway } from './payment-gateway.js'
@@ -39,9 +41,10 @@ export class PaymentsService implements PaymentGateway {
     private readonly notificationService = new NotificationService(),
   ) {}
 
-  async listPayments(input: unknown): Promise<PaymentResponse[]> {
+  async listPayments(input: unknown): Promise<Page<PaymentResponse>> {
     const filters = paymentQuerySchema.parse(input)
-    return (await this.repository.listPayments(filters)).map(toPaymentResponse)
+    const result = await this.repository.listPayments(filters)
+    return toPage(result.items.map(toPaymentResponse), result.total, filters)
   }
 
   async getPayment(id: number): Promise<PaymentResponse> {

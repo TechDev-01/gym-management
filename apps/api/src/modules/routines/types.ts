@@ -62,9 +62,13 @@ export interface CreateAssignmentInput {
 export interface RoutineFilters {
   includeInactive: boolean
   coachId?: number
+  page: number
+  limit: number
 }
 
 export interface AssignmentFilters {
   clientId?: number
   status?: AssignmentStatus
+  page: number
+  limit: number
 }

@@ -79,8 +79,8 @@ function createHandler() {
       return json({ items: records, page: 1, limit: 10, total: records.length })
     }
 
-    if (url.endsWith('/clients')) {
-      return json([client])
+    if (url.endsWith('/clients') || url.includes('/clients?')) {
+      return json({ items: [client], page: 1, limit: 100, total: 1 })
     }
 
     return json({ error: 'not found' }, 404)

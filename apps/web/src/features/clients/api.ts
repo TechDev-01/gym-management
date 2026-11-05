@@ -1,8 +1,9 @@
 import { request } from '../../lib/http'
+import { requestAllPages } from '../../lib/http/pagination'
 import type { Client, ClientInput, ClientUpdateInput } from './types'
 
 export function getClients(): Promise<Client[]> {
-  return request<Client[]>('clients')
+  return requestAllPages<Client>('clients')
 }
 
 export function getClient(id: number): Promise<Client> {

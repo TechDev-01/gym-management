@@ -77,11 +77,11 @@ function mockApi(handler: (url: string, init?: RequestInit) => Response | Promis
 
 function defaultHandler(url: string): Response {
   if (url.includes('/payments')) {
-    return json(payments)
+    return json({ items: payments, page: 1, limit: 100, total: payments.length })
   }
 
-  if (url.endsWith('/clients')) {
-    return json(clients)
+  if (url.endsWith('/clients') || url.includes('/clients?')) {
+    return json({ items: clients, page: 1, limit: 100, total: clients.length })
   }
 
   return json({ error: 'not found' }, 404)
@@ -125,7 +125,7 @@ describe('payments module', () => {
   it('sends status and method filters to the API', async () => {
     const fetchMock = mockApi((url) => {
       if (url.includes('status=FAILED')) {
-        return json([])
+        return json({ items: [], page: 1, limit: 100, total: 0 })
       }
       return defaultHandler(url)
     })
@@ -158,7 +158,7 @@ describe('payments module', () => {
   it('shows an empty state when there are no payments', async () => {
     mockApi((url) => {
       if (url.includes('/payments')) {
-        return json([])
+        return json({ items: [], page: 1, limit: 100, total: 0 })
       }
       return defaultHandler(url)
     })

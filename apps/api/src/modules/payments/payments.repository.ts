@@ -1,5 +1,6 @@
 import type Stripe from 'stripe'
 import type { EntityManager, FindOptionsWhere, Repository } from 'typeorm'
+import type { Page } from '../../shared/pagination.js'
 import { Membership } from '../memberships/membership.entity.js'
 import { Subscription, SubscriptionStatus } from '../memberships/subscription.entity.js'
 import type { PendingPaymentInput } from '../memberships/types.js'
@@ -42,7 +43,7 @@ export class PaymentsRepository {
     return this.paymentRepository.findOneBy({ id })
   }
 
-  listPayments(filters: PaymentFilters): Promise<Payment[]> {
+  async listPayments(filters: PaymentFilters): Promise<Page<Payment>> {
     const where: FindOptionsWhere<Payment> = {}
 
     if (filters.clientId !== undefined) { where.clientId = filters.clientId }
@@ -50,10 +51,13 @@ export class PaymentsRepository {
     if (filters.method !== undefined) { where.method = filters.method }
     if (filters.status !== undefined) { where.status = filters.status }
 
-    return this.paymentRepository.find({
+    const [items, total] = await this.paymentRepository.findAndCount({
       where,
       order: { createdAt: 'DESC' },
+      skip: (filters.page - 1) * filters.limit,
+      take: filters.limit,
     })
+    return { items, page: filters.page, limit: filters.limit, total }
   }
 
   findByStripePaymentIntentId(stripePaymentIntentId: string): Promise<Payment | null> {

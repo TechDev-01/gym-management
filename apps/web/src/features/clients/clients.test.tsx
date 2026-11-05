@@ -116,7 +116,7 @@ function mockApi(
 
 function clientsHandler(url: string, init?: RequestInit): Response {
   if (url.includes('/subscriptions')) {
-    return json(subscriptions)
+    return json({ items: subscriptions, page: 1, limit: 100, total: subscriptions.length })
   }
 
   if (url.includes('/attendance')) {
@@ -135,8 +135,8 @@ function clientsHandler(url: string, init?: RequestInit): Response {
     return json({ ...clients[0], id: 3, email: 'nuevo@example.com' }, 201)
   }
 
-  if (url.endsWith('/clients')) {
-    return json(clients)
+  if (url.endsWith('/clients') || url.includes('/clients?')) {
+    return json({ items: clients, page: 1, limit: 100, total: clients.length })
   }
 
   return json({ error: 'not found' }, 404)

@@ -1,6 +1,8 @@
 import { ConflictError } from '../../shared/errors/conflict.error.js'
 import { ForbiddenError } from '../../shared/errors/forbidden.error.js'
 import { NotFoundError } from '../../shared/errors/not-found.error.js'
+import type { Page } from '../../shared/pagination.js'
+import { toPage } from '../../shared/pagination.js'
 import type { ClientRoutine } from './client-routine.entity.js'
 import { AssignmentStatus } from './routine.enums.js'
 import type { Exercise } from './exercise.entity.js'
@@ -15,6 +17,7 @@ import {
   createRoutineExerciseSchema,
   createRoutineSchema,
   exerciseIdSchema,
+  exerciseQuerySchema,
   routineExerciseIdSchema,
   routineIdSchema,
   routineQuerySchema,
@@ -32,7 +35,11 @@ export class RoutinesService {
     private readonly notificationService = new NotificationService(),
   ) {}
 
-  async listExercises(): Promise<Exercise[]> { return this.repository.listExercises() }
+  async listExercises(input: unknown = {}): Promise<Page<Exercise>> {
+    const query = exerciseQuerySchema.parse(input)
+    const result = await this.repository.listExercises(query)
+    return toPage(result.items, result.total, query)
+  }
 
   async getExercise(inputId: unknown): Promise<Exercise> {
     const { id } = exerciseIdSchema.parse({ id: inputId })
@@ -58,12 +65,15 @@ export class RoutinesService {
     return this.repository.updateExercise(id, data)
   }
 
-  async listRoutines(input: unknown, user: UserContext): Promise<Routine[]> {
+  async listRoutines(input: unknown, user: UserContext): Promise<Page<Routine>> {
     const query = routineQuerySchema.parse(input)
-    return this.repository.listRoutines({
+    const result = await this.repository.listRoutines({
       includeInactive: query.includeInactive && user.role === 'ADMIN',
       coachId: user.role === 'COACH' ? user.coachId ?? -1 : undefined,
+      page: query.page,
+      limit: query.limit,
     })
+    return toPage(result.items, result.total, query)
   }
 
   async getRoutine(inputId: unknown, user: UserContext): Promise<Routine> {
@@ -128,12 +138,15 @@ export class RoutinesService {
     await this.repository.deleteRoutineExercise(routineExerciseId)
   }
 
-  async listAssignments(input: unknown, user: UserContext): Promise<ClientRoutine[]> {
+  async listAssignments(input: unknown, user: UserContext): Promise<Page<ClientRoutine>> {
     const query = assignmentQuerySchema.parse(input)
-    return this.repository.listAssignments({
+    const result = await this.repository.listAssignments({
       clientId: user.role === 'CLIENT' ? user.clientId ?? -1 : query.clientId,
       status: query.status,
+      page: query.page,
+      limit: query.limit,
     })
+    return toPage(result.items, result.total, query)
   }
 
   async getAssignment(inputId: unknown, user: UserContext): Promise<ClientRoutine> {

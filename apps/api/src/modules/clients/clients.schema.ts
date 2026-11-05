@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { paginationSchema } from '../../shared/pagination.js'
 
 export const clientsHealthSchema = z.object({
   status: z.literal('ok'),
@@ -15,6 +16,8 @@ export const createClientSchema = z.object({
 })
 
 export const clientIdSchema = z.coerce.number().int().positive()
+
+export const clientsQuerySchema = paginationSchema.strict()
 
 export const updateClientSchema = z
   .object({

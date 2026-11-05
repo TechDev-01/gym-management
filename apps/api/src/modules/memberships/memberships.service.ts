@@ -1,11 +1,15 @@
 import { ConflictError } from '../../shared/errors/conflict.error.js'
 import { ForbiddenError } from '../../shared/errors/forbidden.error.js'
 import { NotFoundError } from '../../shared/errors/not-found.error.js'
+import type { Page } from '../../shared/pagination.js'
+import { toPage } from '../../shared/pagination.js'
 import { SubscriptionStatus } from './subscription.entity.js'
 import {
   createMembershipSchema,
   createSubscriptionSchema,
+  membershipQuerySchema,
   membershipStatusSchema,
+  subscriptionQuerySchema,
   updateMembershipSchema,
 } from './memberships.schema.js'
 import type { MembershipsRepository } from './memberships.repository.js'
@@ -25,9 +29,14 @@ export class MembershipsService {
     private readonly timezone = 'UTC',
   ) {}
 
-  async listMemberships(includeInactive = false): Promise<MembershipResponse[]> {
-    const memberships = await this.repository.listMemberships({ includeInactive })
-    return memberships.map(toMembershipResponse)
+  async listMemberships(input: unknown = {}): Promise<Page<MembershipResponse>> {
+    const query = membershipQuerySchema.parse(input)
+    const result = await this.repository.listMemberships({
+      includeInactive: query.includeInactive,
+      page: query.page,
+      limit: query.limit,
+    })
+    return toPage(result.items.map(toMembershipResponse), result.total, query)
   }
 
   async getMembership(id: number): Promise<MembershipResponse> {
@@ -152,19 +161,24 @@ export class MembershipsService {
     }
   }
 
-  async listSubscriptions(filters: { clientId?: number; status?: SubscriptionStatus }, user: { role: string; clientId: number | null }): Promise<SubscriptionResponse[]> {
-    const clientId = user.role === 'CLIENT' ? user.clientId ?? -1 : filters.clientId
-    const normalizedFilters: SubscriptionFilters = {}
+  async listSubscriptions(input: unknown, user: { role: string; clientId: number | null }): Promise<Page<SubscriptionResponse>> {
+    const query = subscriptionQuerySchema.parse(input)
+    const clientId = user.role === 'CLIENT' ? user.clientId ?? -1 : query.clientId
+    const normalizedFilters: SubscriptionFilters = {
+      page: query.page,
+      limit: query.limit,
+    }
 
     if (clientId !== undefined) {
       normalizedFilters.clientId = clientId
     }
 
-    if (filters.status !== undefined) {
-      normalizedFilters.status = filters.status
+    if (query.status !== undefined) {
+      normalizedFilters.status = query.status
     }
 
-    return (await this.repository.listSubscriptions(normalizedFilters)).map(toSubscriptionResponse)
+    const result = await this.repository.listSubscriptions(normalizedFilters)
+    return toPage(result.items.map(toSubscriptionResponse), result.total, query)
   }
 
   async getSubscription(id: number, user: { role: string; clientId: number | null }): Promise<SubscriptionResponse> {

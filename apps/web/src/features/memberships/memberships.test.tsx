@@ -140,7 +140,7 @@ function defaultHandler(url: string, init?: RequestInit): Response {
   }
 
   if (url.includes('/memberships')) {
-    return json(memberships)
+    return json({ items: memberships, page: 1, limit: 100, total: memberships.length })
   }
 
   if (url.includes('/subscriptions/10/cancel')) {
@@ -157,15 +157,15 @@ function defaultHandler(url: string, init?: RequestInit): Response {
   }
 
   if (url.includes('/subscriptions')) {
-    return json(subscriptions)
+    return json({ items: subscriptions, page: 1, limit: 100, total: subscriptions.length })
   }
 
   if (url.includes('/payments')) {
-    return json(payments)
+    return json({ items: payments, page: 1, limit: 100, total: payments.length })
   }
 
-  if (url.endsWith('/clients')) {
-    return json(clients)
+  if (url.endsWith('/clients') || url.includes('/clients?')) {
+    return json({ items: clients, page: 1, limit: 100, total: clients.length })
   }
 
   return json({ error: 'not found' }, 404)
@@ -346,7 +346,7 @@ describe('memberships module', () => {
   it('lists subscriptions and filters from the API by status', async () => {
     const fetchMock = mockApi((url, init) => {
       if (url.includes('status=PENDING')) {
-        return json([subscriptions[1]])
+        return json({ items: [subscriptions[1]], page: 1, limit: 100, total: 1 })
       }
       return defaultHandler(url, init)
     })

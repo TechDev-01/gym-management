@@ -22,12 +22,12 @@ export class CoachesController {
   }
 
   getCoaches = async (
-    _request: Request,
+    request: Request,
     response: Response,
     next: NextFunction,
   ): Promise<void> => {
     try {
-      response.status(200).json(await this.coachesService.getCoaches())
+      response.status(200).json(await this.coachesService.getCoaches(request.query))
     } catch (error: unknown) {
       next(error)
     }

@@ -5,6 +5,8 @@ export interface PaymentFilters {
   subscriptionId?: number
   method?: PaymentMethod
   status?: PaymentStatus
+  page: number
+  limit: number
 }
 
 export interface PaymentResponse {

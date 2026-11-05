@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { paginationSchema } from '../../shared/pagination.js'
 import { AssignmentStatus, MuscleGroup, RoutineLevel } from './routine.enums.js'
 
 const idSchema = z.coerce.number().int().positive()
@@ -54,14 +55,16 @@ export const createAssignmentSchema = z.object({
   path: ['endDate'],
 })
 
-export const assignmentQuerySchema = z.object({
+export const assignmentQuerySchema = paginationSchema.extend({
   clientId: idSchema.optional(),
   status: z.nativeEnum(AssignmentStatus).optional(),
 }).strict()
 
-export const routineQuerySchema = z.object({
+export const routineQuerySchema = paginationSchema.extend({
   includeInactive: z.enum(['true', 'false']).transform((value) => value === 'true').default(false),
 }).strict()
+
+export const exerciseQuerySchema = paginationSchema.strict()
 
 export const assignmentStatusSchema = z.object({
   status: z.enum([AssignmentStatus.COMPLETED, AssignmentStatus.CANCELLED]),

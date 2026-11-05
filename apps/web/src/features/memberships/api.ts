@@ -1,4 +1,5 @@
 import { request } from '../../lib/http'
+import { requestAllPages } from '../../lib/http/pagination'
 import type {
   CreateSubscriptionInput,
   Membership,
@@ -9,23 +10,10 @@ import type {
   SubscriptionWithCheckout,
 } from './types'
 
-function buildPath(path: string, filters: object): string {
-  const searchParams = new URLSearchParams()
-
-  for (const [key, value] of Object.entries(filters)) {
-    if (value !== undefined) {
-      searchParams.set(key, String(value))
-    }
-  }
-
-  const query = searchParams.toString()
-  return query ? `${path}?${query}` : path
-}
-
 export function getMemberships(includeInactive = false): Promise<Membership[]> {
-  return request<Membership[]>(buildPath('memberships', {
+  return requestAllPages<Membership>('memberships', {
     includeInactive: includeInactive ? 'true' : undefined,
-  }))
+  })
 }
 
 export function getMembership(id: number): Promise<Membership> {
@@ -48,7 +36,7 @@ export function setMembershipStatus(id: number, isActive: boolean): Promise<Memb
 }
 
 export function getSubscriptions(filters: SubscriptionFilters = {}): Promise<Subscription[]> {
-  return request<Subscription[]>(buildPath('subscriptions', filters))
+  return requestAllPages<Subscription>('subscriptions', filters)
 }
 
 export function getSubscription(id: number): Promise<Subscription> {

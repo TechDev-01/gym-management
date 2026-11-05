@@ -1,11 +1,12 @@
 import type { Repository } from 'typeorm'
+import type { Page, PaginationQuery } from '../../shared/pagination.js'
 import { Coach } from './coach.entity.js'
 import type { CreateCoachInput, UpdateCoachInput } from './types.js'
 
 export interface CoachesRepository {
   getModuleName(): 'coaches'
   create(input: CreateCoachInput): Promise<Coach>
-  getCoaches(): Promise<Coach[]>
+  getCoaches(query: PaginationQuery): Promise<Page<Coach>>
   getCoach(id: number): Promise<Coach | null>
   updateCoaches(id: number, input: UpdateCoachInput): Promise<Coach | null>
   findByEmail(email: string): Promise<Coach | null>
@@ -28,8 +29,13 @@ export class TypeOrmCoachesRepository implements CoachesRepository {
     return this.repository.save(coach)
   }
 
-  getCoaches(): Promise<Coach[]> {
-    return this.repository.find({ order: { id: 'ASC' } })
+  async getCoaches(query: PaginationQuery): Promise<Page<Coach>> {
+    const [items, total] = await this.repository.findAndCount({
+      order: { id: 'ASC' },
+      skip: (query.page - 1) * query.limit,
+      take: query.limit,
+    })
+    return { items, page: query.page, limit: query.limit, total }
   }
 
   getCoach(id: number): Promise<Coach | null> {

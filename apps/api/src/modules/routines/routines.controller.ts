@@ -5,8 +5,8 @@ import { routineStatusSchema } from './routines.schema.js'
 export class RoutinesController {
   constructor(private readonly service: RoutinesService) {}
 
-  listExercises = async (_request: Request, response: Response, next: NextFunction): Promise<void> => {
-    try { response.json(await this.service.listExercises()) } catch (error: unknown) { next(error) }
+  listExercises = async (request: Request, response: Response, next: NextFunction): Promise<void> => {
+    try { response.json(await this.service.listExercises(request.query)) } catch (error: unknown) { next(error) }
   }
 
   getExercise = async (request: Request, response: Response, next: NextFunction): Promise<void> => {

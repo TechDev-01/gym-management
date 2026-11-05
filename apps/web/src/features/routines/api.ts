@@ -1,4 +1,5 @@
 import { request } from '../../lib/http'
+import { requestAllPages } from '../../lib/http/pagination'
 import type {
   AssignmentFilters,
   AssignmentInput,
@@ -15,24 +16,8 @@ import type {
   RoutineUpdateInput,
 } from './types'
 
-function buildPath(
-  path: string,
-  filters: object,
-): string {
-  const searchParams = new URLSearchParams()
-
-  for (const [key, value] of Object.entries(filters as Record<string, unknown>)) {
-    if (value !== undefined && value !== '') {
-      searchParams.set(key, String(value))
-    }
-  }
-
-  const query = searchParams.toString()
-  return query ? `${path}?${query}` : path
-}
-
 export function getExercises(): Promise<Exercise[]> {
-  return request<Exercise[]>('routines/exercises')
+  return requestAllPages<Exercise>('routines/exercises')
 }
 
 export function getExercise(id: number): Promise<Exercise> {
@@ -48,11 +33,9 @@ export function updateExercise(id: number, input: ExerciseUpdateInput): Promise<
 }
 
 export function getRoutines(filters: RoutineFilters = {}): Promise<Routine[]> {
-  return request<Routine[]>(
-    buildPath('routines', {
-      includeInactive: filters.includeInactive ? 'true' : undefined,
-    }),
-  )
+  return requestAllPages<Routine>('routines', {
+    includeInactive: filters.includeInactive ? 'true' : undefined,
+  })
 }
 
 export function getRoutine(id: number): Promise<Routine> {
@@ -105,7 +88,7 @@ export function deleteRoutineExercise(
 }
 
 export function getAssignments(filters: AssignmentFilters = {}): Promise<ClientRoutine[]> {
-  return request<ClientRoutine[]>(buildPath('routines/assignments', filters))
+  return requestAllPages<ClientRoutine>('routines/assignments', filters)
 }
 
 export function getAssignment(id: number): Promise<ClientRoutine> {

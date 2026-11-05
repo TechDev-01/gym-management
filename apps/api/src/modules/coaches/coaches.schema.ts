@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { paginationSchema } from '../../shared/pagination.js'
 
 export const coachesHealthSchema = z.object({
   status: z.literal('ok'),
@@ -6,6 +7,8 @@ export const coachesHealthSchema = z.object({
 })
 
 export const coachIdSchema = z.coerce.number().int().positive()
+
+export const coachesQuerySchema = paginationSchema.strict()
 
 export const createCoachSchema = z.object({
   email: z.string().email(),

@@ -28,7 +28,12 @@ function repository(initialClient = client()): ClientsRepository {
       currentClient?.email === email ? currentClient : null,
     findByDni: async (dni) => (currentClient?.dni === dni ? currentClient : null),
     create: async () => currentClient as Client,
-    getClients: async () => (currentClient ? [currentClient] : []),
+    getClients: async (query) => ({
+      items: currentClient ? [currentClient] : [],
+      page: query.page,
+      limit: query.limit,
+      total: currentClient ? 1 : 0,
+    }),
     getClient: async () => currentClient,
     updateClient: async (_id, input) => {
       currentClient = currentClient ? client({ ...currentClient, ...input }) : null
@@ -42,8 +47,9 @@ test('getClients returns all clients', async () => {
 
   const result = await service.getClients()
 
-  assert.equal(result.length, 1)
-  assert.equal(result[0]?.email, 'ana@example.com')
+  assert.equal(result.items.length, 1)
+  assert.equal(result.items[0]?.email, 'ana@example.com')
+  assert.equal(result.total, 1)
 })
 
 test('getClient throws when the client does not exist', async () => {

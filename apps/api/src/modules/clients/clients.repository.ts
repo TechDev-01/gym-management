@@ -1,5 +1,6 @@
 import type { Repository } from 'typeorm'
 import { AppUser, UserRole } from '../auth/app-user.entity.js'
+import type { Page, PaginationQuery } from '../../shared/pagination.js'
 import { Client } from './client.entity.js'
 import type { CreateClientInput, UpdateClientInput } from './types.js'
 
@@ -12,7 +13,7 @@ export interface ClientsRepository {
     input: Omit<CreateClientInput, 'password'>,
     passwordHash: string,
   ): Promise<Client>
-  getClients(): Promise<Client[]>
+  getClients(query: PaginationQuery): Promise<Page<Client>>
   getClient(id: number): Promise<Client | null>
   updateClient(id: number, input: UpdateClientInput): Promise<Client | null>
 }
@@ -72,8 +73,13 @@ export class TypeOrmClientsRepository implements ClientsRepository {
     })
   }
 
-  getClients(): Promise<Client[]> {
-    return this.repository.find({ order: { id: 'ASC' } })
+  async getClients(query: PaginationQuery): Promise<Page<Client>> {
+    const [items, total] = await this.repository.findAndCount({
+      order: { id: 'ASC' },
+      skip: (query.page - 1) * query.limit,
+      take: query.limit,
+    })
+    return { items, page: query.page, limit: query.limit, total }
   }
 
   getClient(id: number): Promise<Client | null> {
