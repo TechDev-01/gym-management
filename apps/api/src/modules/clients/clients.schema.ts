@@ -13,7 +13,7 @@ export const createClientSchema = z.object({
   name: z.string().trim().min(1),
   lastName: z.string().trim().min(1),
   phone: z.string().trim().min(1),
-})
+}).strict()
 
 export const clientIdSchema = z.coerce.number().int().positive()
 
@@ -27,6 +27,7 @@ export const updateClientSchema = z
     lastName: z.string().trim().min(1).optional(),
     phone: z.string().trim().min(1).optional(),
   })
+  .strict()
   .refine((input) => Object.keys(input).length > 0, {
     message: 'At least one field is required',
   })

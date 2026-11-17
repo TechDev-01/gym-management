@@ -1,3 +1,4 @@
+import bcrypt from 'bcrypt'
 import type { CoachesRepository } from './coaches.repository.js'
 import { ConflictError } from '../../shared/errors/conflict.error.js'
 import { NotFoundError } from '../../shared/errors/not-found.error.js'
@@ -25,7 +26,10 @@ export class CoachesService {
   async register(input: unknown): Promise<CoachResponse> {
     const coachInput = createCoachSchema.parse(input)
 
-    if (await this.coachesRepository.findByEmail(coachInput.email)) {
+    if (
+      await this.coachesRepository.findByEmail(coachInput.email)
+      || await this.coachesRepository.findAppUserByEmail(coachInput.email)
+    ) {
       throw new ConflictError('Email is already registered')
     }
 
@@ -33,7 +37,13 @@ export class CoachesService {
       throw new ConflictError('DNI is already registered')
     }
 
-    const coach = await this.coachesRepository.create(coachInput)
+    const { password, ...coachData } = coachInput
+    const coach = password && this.coachesRepository.createWithCredentials
+      ? await this.coachesRepository.createWithCredentials(
+          coachData,
+          await bcrypt.hash(password, 12),
+        )
+      : await this.coachesRepository.create(coachData)
 
     return this.toCoachResponse(coach)
   }
@@ -70,7 +80,10 @@ export class CoachesService {
     if (
       coachInput.email &&
       coachInput.email !== existingCoach.email &&
-      (await this.coachesRepository.findByEmail(coachInput.email))
+      (
+        await this.coachesRepository.findByEmail(coachInput.email)
+        || await this.coachesRepository.findAppUserByEmail(coachInput.email)
+      )
     ) {
       throw new ConflictError('Email is already registered')
     }

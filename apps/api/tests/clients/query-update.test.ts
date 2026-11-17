@@ -39,6 +39,7 @@ function createRepository(includeDuplicate = false): ClientsRepository {
   return {
     getModuleName: () => 'clients',
     findByEmail: async (email) => clients.find((client) => client.email === email) ?? null,
+    findAppUserByEmail: async () => null,
     findByDni: async (dni) => clients.find((client) => client.dni === dni) ?? null,
     create: async () => clients[0] as Client,
     getClients: async (query) => ({
@@ -132,10 +133,10 @@ test('GET /clients/:id returns 404 for an unknown client', async () => {
   assert.equal(body.code, 'NOT_FOUND')
 })
 
-test('GET /clients/:id returns 400 for an invalid id', async () => {
+test('GET /clients/:id returns 422 for an invalid id', async () => {
   const response = await request('/clients/not-a-number')
 
-  assert.equal(response.status, 400)
+  assert.equal(response.status, 422)
 })
 
 test('PATCH /clients/:id updates the client', async () => {
@@ -166,5 +167,5 @@ test('PATCH /clients/:id rejects an empty body', async () => {
     body: JSON.stringify({}),
   })
 
-  assert.equal(response.status, 400)
+  assert.equal(response.status, 422)
 })

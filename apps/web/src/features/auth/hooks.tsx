@@ -1,8 +1,8 @@
 import { Alert, Box, Button, CircularProgress, Stack, TextField, Typography } from '@mui/material'
-import { createContext, useContext, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { HttpError, clearAccessToken, configureHttpClient, setAccessToken } from '../../lib/http'
-import { loginRequest } from './api'
+import { loginRequest, logoutRequest, refreshRequest } from './api'
 import { clearStoredSession, getStoredSession, storeSession } from './storage'
 import { toAuthUser, type AuthSession, type AuthUser } from './types'
 
@@ -12,7 +12,7 @@ interface AuthContextValue {
   isLoading: boolean
   isRestoring: boolean
   login: (email: string, password: string) => Promise<void>
-  logout: () => void
+  logout: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -22,11 +22,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isRestoring, setIsRestoring] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
 
-  const logout = () => {
+  const clearSession = useCallback(() => {
     clearAccessToken()
     clearStoredSession()
     setSession(null)
-  }
+  }, [])
+
+  const logout = useCallback(async () => {
+    try {
+      await logoutRequest()
+    } catch {
+      // The local session is cleared even if the API call fails.
+    }
+
+    clearSession()
+  }, [clearSession])
+
+  const refreshSession = useCallback(async (): Promise<string | null> => {
+    try {
+      const response = await refreshRequest()
+      const nextSession: AuthSession = {
+        accessToken: response.accessToken,
+        user: toAuthUser(response),
+      }
+
+      setAccessToken(nextSession.accessToken)
+      storeSession(nextSession)
+      setSession(nextSession)
+      return nextSession.accessToken
+    } catch {
+      return null
+    }
+  }, [])
 
   useEffect(() => {
     const storedSession = getStoredSession()
@@ -42,14 +69,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     configureHttpClient({
       onUnauthorized: () => {
-        logout()
+        clearSession()
 
         if (window.location.pathname !== '/login') {
           window.location.assign('/login')
         }
       },
+      onRefresh: refreshSession,
     })
-  })
+  }, [clearSession, refreshSession])
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -76,7 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       logout,
     }),
-    [isLoading, isRestoring, session],
+    [isLoading, isRestoring, logout, session],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

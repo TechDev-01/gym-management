@@ -34,6 +34,7 @@ describe('HTTP client', () => {
       expect.stringContaining('/clients'),
       expect.objectContaining({
         method: 'POST',
+        credentials: 'include',
         body: JSON.stringify({ name: 'Ana' }),
         headers: expect.any(Headers),
       }),
@@ -68,6 +69,51 @@ describe('HTTP client', () => {
     vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ error: 'Expired session' }, 401))
 
     await expect(request('clients')).rejects.toBeInstanceOf(HttpError)
+    expect(onUnauthorized).toHaveBeenCalledOnce()
+  })
+
+  it('refreshes the access token and retries the request once on 401', async () => {
+    setAccessToken('expired-token')
+    const onRefresh = vi.fn().mockResolvedValue('fresh-token')
+    configureHttpClient({ onUnauthorized: vi.fn(), onRefresh })
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(jsonResponse({ error: 'Expired session' }, 401))
+      .mockResolvedValueOnce(jsonResponse({ id: 1 }))
+
+    await expect(request<{ id: number }>('clients')).resolves.toEqual({ id: 1 })
+
+    expect(onRefresh).toHaveBeenCalledOnce()
+    expect(fetch).toHaveBeenCalledTimes(2)
+
+    const [, retryInit] = vi.mocked(fetch).mock.calls[1] as [string, RequestInit]
+    expect((retryInit.headers as Headers).get('Authorization')).toBe('Bearer fresh-token')
+  })
+
+  it('does not retry more than once when the refreshed token is also rejected', async () => {
+    setAccessToken('expired-token')
+    const onUnauthorized = vi.fn()
+    const onRefresh = vi.fn().mockResolvedValue('fresh-token')
+    configureHttpClient({ onUnauthorized, onRefresh })
+    vi.mocked(fetch).mockImplementation(async () =>
+      jsonResponse({ error: 'Expired session' }, 401),
+    )
+
+    await expect(request('clients')).rejects.toBeInstanceOf(HttpError)
+
+    expect(fetch).toHaveBeenCalledTimes(2)
+    expect(onUnauthorized).toHaveBeenCalledOnce()
+  })
+
+  it('notifies the application when the refresh fails', async () => {
+    const onUnauthorized = vi.fn()
+    const onRefresh = vi.fn().mockResolvedValue(null)
+    configureHttpClient({ onUnauthorized, onRefresh })
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ error: 'Expired session' }, 401))
+
+    await expect(request('clients')).rejects.toBeInstanceOf(HttpError)
+
+    expect(onRefresh).toHaveBeenCalledOnce()
+    expect(fetch).toHaveBeenCalledOnce()
     expect(onUnauthorized).toHaveBeenCalledOnce()
   })
 

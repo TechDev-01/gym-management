@@ -85,7 +85,7 @@ export const openapiDocument = {
         requestBody: jsonBody('LoginRequest'),
         responses: {
           ...success('AuthResponse'),
-          '400': { $ref: '#/components/responses/BadRequest' },
+          '400': { $ref: '#/components/responses/BadRequest' }, '422': { $ref: '#/components/responses/UnprocessableEntity' },
           '401': { $ref: '#/components/responses/Unauthorized' },
           '429': { $ref: '#/components/responses/TooManyRequests' },
         },
@@ -99,9 +99,28 @@ export const openapiDocument = {
         requestBody: jsonBody('RegisterRequest'),
         responses: {
           ...success('AuthResponse', '201'),
-          '400': { $ref: '#/components/responses/BadRequest' },
+          '400': { $ref: '#/components/responses/BadRequest' }, '422': { $ref: '#/components/responses/UnprocessableEntity' },
           '401': { $ref: '#/components/responses/Unauthorized' },
           '403': { $ref: '#/components/responses/Forbidden' },
+        },
+      },
+    },
+    '/auth/refresh': {
+      post: {
+        tags: ['Auth'],
+        summary: 'Rotate the refresh token and issue a new access token',
+        responses: {
+          ...success('AuthResponse'),
+          '401': { $ref: '#/components/responses/Unauthorized' },
+        },
+      },
+    },
+    '/auth/logout': {
+      post: {
+        tags: ['Auth'],
+        summary: 'Revoke the current refresh token',
+        responses: {
+          '204': { description: 'Session closed' },
         },
       },
     },
@@ -127,7 +146,7 @@ export const openapiDocument = {
         requestBody: jsonBody('CreateClientRequest'),
         responses: {
           ...success('ClientResponse', '201'),
-          '400': { $ref: '#/components/responses/BadRequest' },
+          '400': { $ref: '#/components/responses/BadRequest' }, '422': { $ref: '#/components/responses/UnprocessableEntity' },
           '401': { $ref: '#/components/responses/Unauthorized' },
           '403': { $ref: '#/components/responses/Forbidden' },
           '409': { $ref: '#/components/responses/Conflict' },
@@ -154,7 +173,7 @@ export const openapiDocument = {
         requestBody: jsonBody('UpdateClientRequest'),
         responses: {
           ...success('ClientResponse'),
-          '400': { $ref: '#/components/responses/BadRequest' },
+          '400': { $ref: '#/components/responses/BadRequest' }, '422': { $ref: '#/components/responses/UnprocessableEntity' },
           '401': { $ref: '#/components/responses/Unauthorized' },
           '403': { $ref: '#/components/responses/Forbidden' },
           '404': { $ref: '#/components/responses/NotFound' },
@@ -183,7 +202,7 @@ export const openapiDocument = {
         requestBody: jsonBody('CreateCoachRequest'),
         responses: {
           ...success('CoachResponse', '201'),
-          '400': { $ref: '#/components/responses/BadRequest' },
+          '400': { $ref: '#/components/responses/BadRequest' }, '422': { $ref: '#/components/responses/UnprocessableEntity' },
           '401': { $ref: '#/components/responses/Unauthorized' },
           '403': { $ref: '#/components/responses/Forbidden' },
           '409': { $ref: '#/components/responses/Conflict' },
@@ -210,7 +229,7 @@ export const openapiDocument = {
         requestBody: jsonBody('UpdateCoachRequest'),
         responses: {
           ...success('CoachResponse'),
-          '400': { $ref: '#/components/responses/BadRequest' },
+          '400': { $ref: '#/components/responses/BadRequest' }, '422': { $ref: '#/components/responses/UnprocessableEntity' },
           '401': { $ref: '#/components/responses/Unauthorized' },
           '403': { $ref: '#/components/responses/Forbidden' },
           '404': { $ref: '#/components/responses/NotFound' },
@@ -245,7 +264,7 @@ export const openapiDocument = {
         requestBody: jsonBody('CreateCoachScheduleRequest'),
         responses: {
           ...success('CoachScheduleResponse', '201'),
-          '400': { $ref: '#/components/responses/BadRequest' },
+          '400': { $ref: '#/components/responses/BadRequest' }, '422': { $ref: '#/components/responses/UnprocessableEntity' },
           '401': { $ref: '#/components/responses/Unauthorized' },
           '403': { $ref: '#/components/responses/Forbidden' },
           '404': { $ref: '#/components/responses/NotFound' },
@@ -275,7 +294,7 @@ export const openapiDocument = {
         requestBody: jsonBody('UpdateCoachScheduleRequest'),
         responses: {
           ...success('CoachScheduleResponse'),
-          '400': { $ref: '#/components/responses/BadRequest' },
+          '400': { $ref: '#/components/responses/BadRequest' }, '422': { $ref: '#/components/responses/UnprocessableEntity' },
           '401': { $ref: '#/components/responses/Unauthorized' },
           '403': { $ref: '#/components/responses/Forbidden' },
           '404': { $ref: '#/components/responses/NotFound' },
@@ -296,20 +315,20 @@ export const openapiDocument = {
     },
     '/memberships': {
       get: { tags: ['Memberships'], summary: 'List memberships', ...secured(['ADMIN', 'RECEPTION', 'CLIENT']), parameters: [...paginationParameters, queryParameter('includeInactive', { type: 'boolean', default: false })], responses: success('MembershipListResponse') },
-      post: { tags: ['Memberships'], summary: 'Create a membership', ...secured(['ADMIN', 'RECEPTION']), requestBody: jsonBody('CreateMembershipRequest'), responses: { ...success('MembershipResponse', '201'), '400': { $ref: '#/components/responses/BadRequest' }, '409': { $ref: '#/components/responses/Conflict' } } },
+      post: { tags: ['Memberships'], summary: 'Create a membership', ...secured(['ADMIN', 'RECEPTION']), requestBody: jsonBody('CreateMembershipRequest'), responses: { ...success('MembershipResponse', '201'), '400': { $ref: '#/components/responses/BadRequest' }, '422': { $ref: '#/components/responses/UnprocessableEntity' }, '409': { $ref: '#/components/responses/Conflict' } } },
     },
     '/memberships/{id}': {
       parameters: [idParameter],
       get: { tags: ['Memberships'], summary: 'Get a membership', ...secured(['ADMIN', 'RECEPTION', 'CLIENT']), responses: { ...success('MembershipResponse'), '404': { $ref: '#/components/responses/NotFound' } } },
-      patch: { tags: ['Memberships'], summary: 'Update a membership', ...secured(['ADMIN', 'RECEPTION']), requestBody: jsonBody('UpdateMembershipRequest'), responses: { ...success('MembershipResponse'), '400': { $ref: '#/components/responses/BadRequest' }, '404': { $ref: '#/components/responses/NotFound' }, '409': { $ref: '#/components/responses/Conflict' } } },
+      patch: { tags: ['Memberships'], summary: 'Update a membership', ...secured(['ADMIN', 'RECEPTION']), requestBody: jsonBody('UpdateMembershipRequest'), responses: { ...success('MembershipResponse'), '400': { $ref: '#/components/responses/BadRequest' }, '422': { $ref: '#/components/responses/UnprocessableEntity' }, '404': { $ref: '#/components/responses/NotFound' }, '409': { $ref: '#/components/responses/Conflict' } } },
     },
     '/memberships/{id}/status': {
       parameters: [idParameter],
-      patch: { tags: ['Memberships'], summary: 'Change membership status', ...secured(['ADMIN']), requestBody: jsonBody('MembershipStatusRequest'), responses: { ...success('MembershipResponse'), '400': { $ref: '#/components/responses/BadRequest' }, '404': { $ref: '#/components/responses/NotFound' } } },
+      patch: { tags: ['Memberships'], summary: 'Change membership status', ...secured(['ADMIN']), requestBody: jsonBody('MembershipStatusRequest'), responses: { ...success('MembershipResponse'), '400': { $ref: '#/components/responses/BadRequest' }, '422': { $ref: '#/components/responses/UnprocessableEntity' }, '404': { $ref: '#/components/responses/NotFound' } } },
     },
     '/memberships/{id}/subscriptions': {
       parameters: [idParameter],
-      post: { tags: ['Memberships'], summary: 'Create a subscription', ...secured(['ADMIN', 'RECEPTION', 'CLIENT']), requestBody: jsonBody('CreateSubscriptionRequest'), responses: { ...success('SubscriptionWithCheckoutResponse', '201'), '400': { $ref: '#/components/responses/BadRequest' }, '404': { $ref: '#/components/responses/NotFound' }, '409': { $ref: '#/components/responses/Conflict' } } },
+      post: { tags: ['Memberships'], summary: 'Create a subscription', ...secured(['ADMIN', 'RECEPTION', 'CLIENT']), requestBody: jsonBody('CreateSubscriptionRequest'), responses: { ...success('SubscriptionWithCheckoutResponse', '201'), '400': { $ref: '#/components/responses/BadRequest' }, '422': { $ref: '#/components/responses/UnprocessableEntity' }, '404': { $ref: '#/components/responses/NotFound' }, '409': { $ref: '#/components/responses/Conflict' } } },
     },
     '/subscriptions': {
       get: { tags: ['Subscriptions'], summary: 'List subscriptions', ...secured(['ADMIN', 'RECEPTION', 'CLIENT']), parameters: [...paginationParameters, queryParameter('clientId', { type: 'integer', minimum: 1 }), queryParameter('status', { $ref: '#/components/schemas/SubscriptionStatus' })], responses: success('SubscriptionListResponse') },
@@ -324,7 +343,7 @@ export const openapiDocument = {
     },
     '/subscriptions/{id}/payment-confirmation': {
       parameters: [idParameter],
-      post: { tags: ['Subscriptions'], summary: 'Confirm a manual payment', ...secured(['ADMIN', 'RECEPTION']), responses: { ...success('SubscriptionResponse'), '404': { $ref: '#/components/responses/NotFound' }, '409': { $ref: '#/components/responses/Conflict' } } },
+      post: { tags: ['Subscriptions'], summary: 'Confirm a manual payment', ...secured(['ADMIN', 'RECEPTION']), responses: { ...success('SubscriptionResponse'), '404': { $ref: '#/components/responses/NotFound' }, '422': { $ref: '#/components/responses/UnprocessableEntity' } } },
     },
     '/attendance': {
       get: { tags: ['Attendance'], summary: 'List attendance records', ...secured(['ADMIN', 'RECEPTION', 'CLIENT']), parameters: [queryParameter('clientId', { type: 'integer', minimum: 1 }), queryParameter('from', { type: 'string', format: 'date' }), queryParameter('to', { type: 'string', format: 'date' }), queryParameter('open', { type: 'boolean' }), queryParameter('page', { type: 'integer', minimum: 1, default: 1 }), queryParameter('limit', { type: 'integer', minimum: 1, maximum: 100, default: 20 })], responses: success('AttendancePageResponse') },
@@ -559,7 +578,7 @@ export const openapiDocument = {
         },
       },
       CoachListResponse: pageResponse('CoachResponse'),
-      CreateCoachRequest: { type: 'object', required: ['email', 'dni', 'name', 'lastName', 'phone'], properties: { email: { type: 'string', format: 'email' }, dni: { type: 'string' }, name: { type: 'string' }, lastName: { type: 'string' }, phone: { type: 'string' } } },
+      CreateCoachRequest: { type: 'object', required: ['email', 'dni', 'name', 'lastName', 'phone'], properties: { email: { type: 'string', format: 'email' }, password: { type: 'string', minLength: 8 }, dni: { type: 'string' }, name: { type: 'string' }, lastName: { type: 'string' }, phone: { type: 'string' } }, additionalProperties: false },
       UpdateCoachRequest: { type: 'object', minProperties: 1, properties: { email: { type: 'string', format: 'email' }, dni: { type: 'string' }, name: { type: 'string' }, lastName: { type: 'string' }, phone: { type: 'string' } } },
       MembershipResponse: {
         type: 'object', required: ['id', 'name', 'description', 'durationDays', 'maxDaysPerWeek', 'priceAmount', 'currency', 'isActive', 'stripePriceId'],
@@ -575,7 +594,7 @@ export const openapiDocument = {
       MembershipStatusRequest: { type: 'object', required: ['isActive'], properties: { isActive: { type: 'boolean' } }, additionalProperties: false },
       SubscriptionStatus: { type: 'string', enum: ['PENDING', 'ACTIVE', 'EXPIRED', 'CANCELLED'] },
       PaymentMethod: { type: 'string', enum: ['CARD', 'CASH', 'TRANSFER'] },
-      CreateSubscriptionRequest: { type: 'object', required: ['clientId', 'membershipId', 'method'], properties: { clientId: { type: 'integer' }, membershipId: { type: 'integer' }, method: { $ref: '#/components/schemas/PaymentMethod' } }, additionalProperties: false },
+      CreateSubscriptionRequest: { type: 'object', required: ['clientId', 'method'], properties: { clientId: { type: 'integer' }, method: { $ref: '#/components/schemas/PaymentMethod' } }, additionalProperties: false },
       SubscriptionResponse: { type: 'object', required: ['id', 'clientId', 'membershipId', 'status', 'startDate', 'endDate', 'createdAt'], properties: { id: { type: 'integer' }, clientId: { type: 'integer' }, membershipId: { type: 'integer' }, status: { $ref: '#/components/schemas/SubscriptionStatus' }, startDate: { type: 'string', format: 'date-time', nullable: true }, endDate: { type: 'string', format: 'date-time', nullable: true }, createdAt: { type: 'string', format: 'date-time' } } },
       SubscriptionWithCheckoutResponse: { allOf: [{ $ref: '#/components/schemas/SubscriptionResponse' }, { type: 'object', required: ['checkoutUrl'], properties: { checkoutUrl: { type: 'string', format: 'uri', nullable: true } } }] },
       SubscriptionListResponse: pageResponse('SubscriptionResponse'),
@@ -620,7 +639,8 @@ export const openapiDocument = {
       },
     },
     responses: {
-      BadRequest: { description: 'Invalid request', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
+      BadRequest: { description: 'Malformed request syntax', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
+      UnprocessableEntity: { description: 'Request is well formed but semantically invalid', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
       Unauthorized: { description: 'Authentication required', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
       Forbidden: { description: 'Insufficient permissions', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },
       NotFound: { description: 'Resource not found', content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } } },

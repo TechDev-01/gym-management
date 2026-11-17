@@ -88,7 +88,6 @@ export function SubscriptionFormPage() {
         membershipId: Number(values.membershipId),
         input: {
           clientId: Number(values.clientId),
-          membershipId: Number(values.membershipId),
           method: values.method,
         },
       })

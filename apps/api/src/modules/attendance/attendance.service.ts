@@ -1,6 +1,7 @@
 import { ConflictError } from '../../shared/errors/conflict.error.js'
 import { ForbiddenError } from '../../shared/errors/forbidden.error.js'
 import { NotFoundError } from '../../shared/errors/not-found.error.js'
+import { UnprocessableEntityError } from '../../shared/errors/unprocessable-entity.error.js'
 import type { AttendanceRepository } from './attendance.repository.js'
 import { checkInSchema } from './attendance.schema.js'
 import type { AttendancePage } from './types.js'
@@ -22,7 +23,7 @@ export class AttendanceService {
   async checkIn(input: unknown, user: UserContext): Promise<ReturnType<typeof toAttendanceResponse>> {
     const data = checkInSchema.parse(input ?? {})
     const clientId = user.role === 'CLIENT' ? user.clientId : data.clientId
-    if (!clientId) throw new ConflictError('clientId is required')
+    if (!clientId) throw new UnprocessableEntityError('clientId is required')
     if (user.role === 'CLIENT' && data.clientId !== undefined && data.clientId !== user.clientId) {
       throw new ForbiddenError('Clients can only check in themselves')
     }
@@ -32,7 +33,7 @@ export class AttendanceService {
 
     const localDate = this.localDate(this.now())
     const subscription = await this.repository.findActiveSubscription(clientId, localDate)
-    if (!subscription) throw new ConflictError('Client does not have an active subscription')
+    if (!subscription) throw new UnprocessableEntityError('Client does not have an active subscription')
     if (await this.repository.findOpenAttendance(clientId)) {
       throw new ConflictError('Client already has an open attendance')
     }
@@ -47,7 +48,7 @@ export class AttendanceService {
         this.timezone,
       ) > 0
       if (!alreadyAttendedToday && days >= subscription.maxDaysPerWeek) {
-        throw new ConflictError('Weekly attendance limit reached')
+        throw new UnprocessableEntityError('Weekly attendance limit reached')
       }
     }
 

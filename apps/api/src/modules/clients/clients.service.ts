@@ -29,7 +29,10 @@ export class ClientsService {
   async register(input: unknown): Promise<ClientResponse> {
     const clientInput = createClientSchema.parse(input)
 
-    if (await this.clientsRepository.findByEmail(clientInput.email)) {
+    if (
+      await this.clientsRepository.findByEmail(clientInput.email)
+      || await this.clientsRepository.findAppUserByEmail(clientInput.email)
+    ) {
       throw new ConflictError('Email is already registered')
     }
 
@@ -77,7 +80,10 @@ export class ClientsService {
     if (
       clientInput.email &&
       clientInput.email !== existingClient.email &&
-      (await this.clientsRepository.findByEmail(clientInput.email))
+      (
+        await this.clientsRepository.findByEmail(clientInput.email)
+        || await this.clientsRepository.findAppUserByEmail(clientInput.email)
+      )
     ) {
       throw new ConflictError('Email is already registered')
     }

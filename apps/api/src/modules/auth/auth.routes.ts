@@ -12,6 +12,8 @@ export function createAuthRouter(authService: AuthService): Router {
   const authController = new AuthController(authService)
 
   router.post('/login', loginRateLimiter, validate({ body: loginSchema }), authController.login)
+  router.post('/refresh', authController.refresh)
+  router.post('/logout', authController.logout)
   router.post(
     '/register',
     authenticate(),

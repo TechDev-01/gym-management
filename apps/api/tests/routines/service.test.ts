@@ -117,3 +117,45 @@ test('a client cannot receive a second active routine', async () => {
     { message: 'Client already has an active routine' },
   )
 })
+
+test('a coach can only read its own routine', async () => {
+  const service = new RoutinesService(repository({
+    findRoutine: async () => routine({ createdById: 8 }),
+  }))
+
+  await assert.rejects(
+    () => service.getRoutine(1, coachUser),
+    { message: 'Forbidden' },
+  )
+})
+
+test('a coach can read a routine it created', async () => {
+  const service = new RoutinesService(repository({
+    findRoutine: async () => routine({ createdById: 3 }),
+  }))
+
+  const result = await service.getRoutine(1, coachUser)
+
+  assert.equal(result.id, 1)
+})
+
+test('a coach cannot read an assignment created by another coach', async () => {
+  const service = new RoutinesService(repository({
+    findAssignment: async () => assignment({ assignedById: 8 }),
+  }))
+
+  await assert.rejects(
+    () => service.getAssignment(4, coachUser),
+    { message: 'Forbidden' },
+  )
+})
+
+test('a coach can read an assignment it created', async () => {
+  const service = new RoutinesService(repository({
+    findAssignment: async () => assignment({ assignedById: 3 }),
+  }))
+
+  const result = await service.getAssignment(4, coachUser)
+
+  assert.equal(result.id, 4)
+})

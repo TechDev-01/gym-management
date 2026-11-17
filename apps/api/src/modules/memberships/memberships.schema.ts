@@ -33,7 +33,6 @@ export const membershipStatusSchema = z.object({
 
 export const createSubscriptionSchema = z.object({
   clientId: z.number().int().positive(),
-  membershipId: z.number().int().positive(),
   method: z.nativeEnum(PaymentMethod),
 }).strict()
 

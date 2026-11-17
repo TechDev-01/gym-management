@@ -23,6 +23,7 @@ function createClientRepository(overrides: Partial<ClientsRepository> = {}): Cli
   return {
     getModuleName: () => 'clients',
     findByEmail: async () => null,
+    findAppUserByEmail: async () => null,
     findByDni: async () => null,
     create: async () => client,
     ...overrides,

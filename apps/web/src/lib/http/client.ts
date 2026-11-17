@@ -7,12 +7,15 @@ export interface HttpRequestOptions extends Omit<RequestInit, 'body' | 'headers'
   body?: unknown
   headers?: Record<string, string>
   handleUnauthorized?: boolean
+  handleRefresh?: boolean
 }
 
 export type UnauthorizedHandler = (error: HttpError) => void
+export type RefreshHandler = () => Promise<string | null>
 
 interface HttpClientConfig {
   onUnauthorized?: UnauthorizedHandler
+  onRefresh?: RefreshHandler
 }
 
 let unauthorizedHandler: UnauthorizedHandler = (error) => {
@@ -25,8 +28,12 @@ let unauthorizedHandler: UnauthorizedHandler = (error) => {
   console.warn(error.message)
 }
 
+let refreshHandler: RefreshHandler | null = null
+let refreshPromise: Promise<string | null> | null = null
+
 export function configureHttpClient(config: HttpClientConfig): void {
   unauthorizedHandler = config.onUnauthorized ?? unauthorizedHandler
+  refreshHandler = config.onRefresh ?? null
 }
 
 export function getAccessToken(): string | null {
@@ -82,40 +89,74 @@ function createHttpError(status: number, body: unknown): HttpError {
   })
 }
 
+async function attemptTokenRefresh(): Promise<string | null> {
+  if (!refreshHandler) {
+    return null
+  }
+
+  if (!refreshPromise) {
+    refreshPromise = refreshHandler()
+      .catch(() => null)
+      .finally(() => {
+        refreshPromise = null
+      })
+  }
+
+  return refreshPromise
+}
+
 export async function request<T>(
   path: string,
   options: HttpRequestOptions = {},
 ): Promise<T> {
-  const { body: requestBody, headers: requestHeaders, handleUnauthorized, ...requestInit } =
-    options
-  const token = getAccessToken()
-  const headers = new Headers(requestHeaders)
+  const {
+    body: requestBody,
+    headers: requestHeaders,
+    handleUnauthorized,
+    handleRefresh,
+    ...requestInit
+  } = options
 
-  if (requestBody !== undefined) {
-    headers.set('Content-Type', 'application/json')
+  const send = async (token: string | null): Promise<Response> => {
+    const headers = new Headers(requestHeaders)
+
+    if (requestBody !== undefined) {
+      headers.set('Content-Type', 'application/json')
+    }
+
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`)
+    }
+
+    try {
+      return await fetch(getRequestUrl(path), {
+        credentials: 'include',
+        ...requestInit,
+        body: requestBody === undefined ? undefined : JSON.stringify(requestBody),
+        headers,
+      })
+    } catch (cause: unknown) {
+      throw new HttpError('No fue posible conectar con la API.', {
+        status: 0,
+        code: 'NETWORK_ERROR',
+        cause,
+      })
+    }
   }
 
-  if (token) {
-    headers.set('Authorization', `Bearer ${token}`)
+  let token = getAccessToken()
+  let response = await send(token)
+  let body = await parseResponseBody(response)
+
+  if (response.status === 401 && handleRefresh !== false) {
+    const refreshedToken = await attemptTokenRefresh()
+
+    if (refreshedToken) {
+      token = refreshedToken
+      response = await send(token)
+      body = await parseResponseBody(response)
+    }
   }
-
-  let response: Response
-
-  try {
-    response = await fetch(getRequestUrl(path), {
-      ...requestInit,
-      body: requestBody === undefined ? undefined : JSON.stringify(requestBody),
-      headers,
-    })
-  } catch (cause: unknown) {
-    throw new HttpError('No fue posible conectar con la API.', {
-      status: 0,
-      code: 'NETWORK_ERROR',
-      cause,
-    })
-  }
-
-  const body = await parseResponseBody(response)
 
   if (!response.ok) {
     const error = createHttpError(response.status, body)

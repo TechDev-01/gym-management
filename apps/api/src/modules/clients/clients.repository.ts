@@ -7,6 +7,7 @@ import type { CreateClientInput, UpdateClientInput } from './types.js'
 export interface ClientsRepository {
   getModuleName(): 'clients'
   findByEmail(email: string): Promise<Client | null>
+  findAppUserByEmail(email: string): Promise<AppUser | null>
   findByDni(dni: string): Promise<Client | null>
   create(input: CreateClientInput): Promise<Client>
   createWithCredentials?(
@@ -27,6 +28,10 @@ export class TypeOrmClientsRepository implements ClientsRepository {
 
   findByEmail(email: string): Promise<Client | null> {
     return this.repository.findOne({ where: { email } })
+  }
+
+  findAppUserByEmail(email: string): Promise<AppUser | null> {
+    return this.repository.manager.findOne(AppUser, { where: { email } })
   }
 
   findByDni(dni: string): Promise<Client | null> {

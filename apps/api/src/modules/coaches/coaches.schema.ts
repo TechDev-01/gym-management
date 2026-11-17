@@ -12,11 +12,12 @@ export const coachesQuerySchema = paginationSchema.strict()
 
 export const createCoachSchema = z.object({
   email: z.string().email(),
+  password: z.string().min(8).max(1024).optional(),
   dni: z.string().trim().min(1),
   name: z.string().trim().min(1),
   lastName: z.string().trim().min(1),
   phone: z.string().trim().min(1),
-})
+}).strict()
 
 export const updateCoachSchema = z
   .object({
@@ -26,6 +27,7 @@ export const updateCoachSchema = z
     lastName: z.string().trim().min(1).optional(),
     phone: z.string().trim().min(1).optional(),
   })
+  .strict()
   .refine((input) => Object.keys(input).length > 0, {
     message: 'At least one field is required',
   })
@@ -42,6 +44,7 @@ export const createCoachScheduleSchema = z
     startTime: scheduleTimeSchema,
     endTime: scheduleTimeSchema,
   })
+  .strict()
   .refine((input) => input.startTime < input.endTime, {
     message: 'startTime must be earlier than endTime',
     path: ['endTime'],
@@ -53,6 +56,7 @@ export const updateCoachScheduleSchema = z
     startTime: scheduleTimeSchema.optional(),
     endTime: scheduleTimeSchema.optional(),
   })
+  .strict()
   .refine((input) => Object.keys(input).length > 0, {
     message: 'At least one field is required',
   })

@@ -1,6 +1,7 @@
 import { ConflictError } from '../../shared/errors/conflict.error.js'
 import { ForbiddenError } from '../../shared/errors/forbidden.error.js'
 import { NotFoundError } from '../../shared/errors/not-found.error.js'
+import { UnprocessableEntityError } from '../../shared/errors/unprocessable-entity.error.js'
 import type { Page } from '../../shared/pagination.js'
 import { toPage } from '../../shared/pagination.js'
 import { SubscriptionStatus } from './subscription.entity.js'
@@ -68,7 +69,7 @@ export class MembershipsService {
     const hasHistoricalSubscriptions = await this.repository.countMembershipSubscriptions(id) > 0
     const protectedFields: (keyof UpdateMembershipInput)[] = ['priceAmount', 'durationDays', 'maxDaysPerWeek']
     if (hasHistoricalSubscriptions && protectedFields.some((field) => data[field] !== undefined)) {
-      throw new ConflictError('Pricing and duration cannot change after a subscription exists')
+      throw new UnprocessableEntityError('Pricing and duration cannot change after a subscription exists')
     }
 
     return toMembershipResponse(await this.repository.updateMembership(id, data))
@@ -81,7 +82,11 @@ export class MembershipsService {
     return toMembershipResponse(await this.repository.setMembershipActive(id, isActive))
   }
 
-  async createSubscription(input: unknown, user: { role: string; clientId: number | null }): Promise<SubscriptionResponse & { checkoutUrl: string | null }> {
+  async createSubscription(
+    membershipId: number,
+    input: unknown,
+    user: { role: string; clientId: number | null },
+  ): Promise<SubscriptionResponse & { checkoutUrl: string | null }> {
     const data = createSubscriptionSchema.parse(input)
     if (user.role === 'CLIENT' && user.clientId !== data.clientId) {
       throw new ForbiddenError('Clients can only create their own subscriptions')
@@ -92,8 +97,8 @@ export class MembershipsService {
       if (!client || !client.isActive) {
         throw new NotFoundError('Active client not found')
       }
-      const membership = await repository.findMembershipById(data.membershipId)
-      if (!membership || !membership.isActive) throw new ConflictError('Membership is not active')
+      const membership = await repository.findMembershipById(membershipId)
+      if (!membership || !membership.isActive) throw new UnprocessableEntityError('Membership is not active')
       if (await repository.findClientSubscription(data.clientId, SubscriptionStatus.ACTIVE)) {
         throw new ConflictError('Client already has an active subscription')
       }
@@ -197,13 +202,13 @@ export class MembershipsService {
       }
       return toSubscriptionResponse(await this.repository.cancelSubscription(id))
     }
-    throw new ConflictError('Expired subscriptions cannot be cancelled')
+    throw new UnprocessableEntityError('Expired subscriptions cannot be cancelled')
   }
 
   async confirmManualPayment(id: number, user: { role: string; id: string }): Promise<SubscriptionResponse> {
     if (!['ADMIN', 'RECEPTION'].includes(user.role)) throw new ForbiddenError('Only staff can confirm payments')
     const subscription = await this.requireSubscription(id)
-    if (subscription.status !== SubscriptionStatus.PENDING) throw new ConflictError('Only pending subscriptions can be confirmed')
+    if (subscription.status !== SubscriptionStatus.PENDING) throw new UnprocessableEntityError('Only pending subscriptions can be confirmed')
     const membership = await this.requireMembership(subscription.membershipId)
     const startDate = this.todayInTimezone()
     const endDate = addDays(startDate, membership.durationDays - 1)
@@ -236,7 +241,7 @@ export class MembershipsService {
         day: '2-digit',
       }).format(new Date())
     } catch {
-      throw new ConflictError('GYM_TIMEZONE is invalid')
+      throw new Error('GYM_TIMEZONE is invalid')
     }
   }
 }

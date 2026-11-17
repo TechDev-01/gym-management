@@ -45,7 +45,8 @@ export class MembershipsController {
     try {
       const { id } = membershipIdSchema.parse(request.params)
       response.status(201).json(await this.service.createSubscription(
-        { ...request.body, membershipId: id },
+        id,
+        request.body,
         request.user!,
       ))
     } catch (error: unknown) { next(error) }

@@ -98,11 +98,11 @@ test('rejects a new subscription when the client has an active one', async () =>
   })
 
   await assert.rejects(
-    () => new MembershipsService(repository).createSubscription({
-      clientId: 7,
-      membershipId: 1,
-      method: PaymentMethod.CASH,
-    }, { role: 'RECEPTION', clientId: null }),
+    () => new MembershipsService(repository).createSubscription(
+      1,
+      { clientId: 7, method: PaymentMethod.CASH },
+      { role: 'RECEPTION', clientId: null },
+    ),
     { message: 'Client already has an active subscription' },
   )
 })
@@ -122,11 +122,11 @@ test('cancels a pending subscription before creating another one', async () => {
     expirePendingCheckout: async (id) => { expiredId = id },
   })
 
-  const result = await new MembershipsService(repository, gateway).createSubscription({
-    clientId: 7,
-    membershipId: 1,
-    method: PaymentMethod.CARD,
-  }, { role: 'RECEPTION', clientId: null })
+  const result = await new MembershipsService(repository, gateway).createSubscription(
+    1,
+    { clientId: 7, method: PaymentMethod.CARD },
+    { role: 'RECEPTION', clientId: null },
+  )
 
   assert.equal(cancelledId, 9)
   assert.equal(expiredId, 9)
@@ -205,4 +205,18 @@ test('restricts subscription listings to the client own record', async () => {
   )
 
   assert.deepEqual(receivedFilters, { clientId: 7, page: 1, limit: 20 })
+})
+
+test('createSubscription rejects a membershipId in the body', async () => {
+  const repository = createRepository()
+
+  await assert.rejects(
+    () => new MembershipsService(repository).createSubscription(
+      1,
+      { clientId: 7, membershipId: 2, method: PaymentMethod.CASH },
+      { role: 'RECEPTION', clientId: null },
+    ),
+    (error: unknown) =>
+      error instanceof Error && error.name === 'ZodError',
+  )
 })

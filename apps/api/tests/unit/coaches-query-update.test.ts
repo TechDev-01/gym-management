@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import bcrypt from 'bcrypt'
 import express from 'express'
 import jwt from 'jsonwebtoken'
 import { test } from 'node:test'
@@ -7,6 +8,7 @@ import { CoachesService } from '../../src/modules/coaches/coaches.service.js'
 import { createCoachesRouter } from '../../src/modules/coaches/coaches.routes.js'
 import type { CoachesRepository } from '../../src/modules/coaches/coaches.repository.js'
 import type { Coach } from '../../src/modules/coaches/coach.entity.js'
+import type { CreateCoachInput } from '../../src/modules/coaches/types.js'
 import { errorHandlerMiddleware } from '../../src/shared/middlewares/error-handler.middleware.js'
 
 const secret = 'test-secret-with-at-least-32-characters'
@@ -34,6 +36,7 @@ function repository(initialCoach: Coach | null = coach()): CoachesRepository {
 
   return {
     getModuleName: () => 'coaches',
+    create: async (input) => coach({ id: 2, ...input }),
     getCoaches: async (query) => ({
       items: currentCoach ? [currentCoach] : [],
       page: query.page,
@@ -43,6 +46,7 @@ function repository(initialCoach: Coach | null = coach()): CoachesRepository {
     getCoach: async () => currentCoach,
     findByEmail: async (email) =>
       currentCoach?.email === email ? currentCoach : null,
+    findAppUserByEmail: async () => null,
     findByDni: async (dni) => (currentCoach?.dni === dni ? currentCoach : null),
     updateCoaches: async (_id, input) => {
       currentCoach = currentCoach
@@ -159,10 +163,10 @@ test('GET /coaches/:id returns 200 with the requested coach', async () => {
   assert.equal((await response.json()).id, 1)
 })
 
-test('GET /coaches/:id returns 400 for an invalid id', async () => {
+test('GET /coaches/:id returns 422 for an invalid id', async () => {
   const response = await request('/coaches/not-a-number')
 
-  assert.equal(response.status, 400)
+  assert.equal(response.status, 422)
 })
 
 test('PATCH /coaches/:id returns 200 for valid input', async () => {
@@ -188,24 +192,24 @@ test('PATCH /coaches/:id returns 409 for a duplicate email', async () => {
   assert.equal(response.status, 409)
 })
 
-test('PATCH /coaches/:id returns 400 for an empty body', async () => {
+test('PATCH /coaches/:id returns 422 for an empty body', async () => {
   const response = await request('/coaches/1', {
     method: 'PATCH',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({}),
   })
 
-  assert.equal(response.status, 400)
+  assert.equal(response.status, 422)
 })
 
-test('PATCH /coaches/:id returns 400 for an invalid field', async () => {
+test('PATCH /coaches/:id returns 422 for an invalid field', async () => {
   const response = await request('/coaches/1', {
     method: 'PATCH',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ email: 'invalid' }),
   })
 
-  assert.equal(response.status, 400)
+  assert.equal(response.status, 422)
 })
 
 test('service rejects an empty update body', async () => {
@@ -217,4 +221,112 @@ test('service rejects an empty update body', async () => {
       error instanceof ZodError &&
       error.issues[0]?.message === 'At least one field is required',
   )
+})
+
+test('register hashes an optional coach password and creates credentials', async () => {
+  let receivedInput: Omit<CreateCoachInput, 'password'> | undefined
+  let receivedHash = ''
+  const coachRepository = repository()
+  coachRepository.createWithCredentials = async (input, passwordHash) => {
+    receivedInput = input
+    receivedHash = passwordHash
+    return coach({ id: 2, ...input })
+  }
+  const service = new CoachesService(coachRepository)
+
+  const result = await service.register({
+    email: 'new@example.com',
+    password: 'strong-password',
+    dni: '87654321',
+    name: 'Nueva',
+    lastName: 'Entrenadora',
+    phone: '555-0200',
+  })
+
+  assert(receivedInput)
+  assert.equal('password' in receivedInput, false)
+  assert.equal(receivedInput.email, 'new@example.com')
+  assert.equal(await bcrypt.compare('strong-password', receivedHash), true)
+  assert.equal(result.email, 'new@example.com')
+})
+
+test('register without a password creates a coach without credentials', async () => {
+  let createdWithoutPassword = false
+  const coachRepository = repository()
+  coachRepository.create = async (input) => {
+    createdWithoutPassword = !('password' in input)
+    return coach({ id: 2, ...input })
+  }
+  const service = new CoachesService(coachRepository)
+
+  await service.register({
+    email: 'new@example.com',
+    dni: '87654321',
+    name: 'Nueva',
+    lastName: 'Entrenadora',
+    phone: '555-0200',
+  })
+
+  assert.equal(createdWithoutPassword, true)
+})
+
+test('register rejects an email already used by another app user', async () => {
+  const coachRepository = repository()
+  coachRepository.findAppUserByEmail = async () => ({ id: 9 } as never)
+  const service = new CoachesService(coachRepository)
+
+  await assert.rejects(
+    () => service.register({
+      email: 'client@example.com',
+      dni: '87654321',
+      name: 'Nueva',
+      lastName: 'Entrenadora',
+      phone: '555-0200',
+    }),
+    { message: 'Email is already registered' },
+  )
+})
+
+test('POST /coaches returns 422 for an unknown field', async () => {
+  const response = await request('/coaches', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      email: 'new@example.com',
+      dni: '87654321',
+      name: 'Nueva',
+      lastName: 'Entrenadora',
+      phone: '555-0200',
+      role: 'ADMIN',
+    }),
+  })
+
+  assert.equal(response.status, 422)
+})
+
+test('POST /coaches returns 201 and does not expose the password', async () => {
+  let receivedHash = ''
+  const coachRepository = repository()
+  coachRepository.createWithCredentials = async (input, passwordHash) => {
+    receivedHash = passwordHash
+    return coach({ id: 2, ...input })
+  }
+  const response = await request('/coaches', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      email: 'new@example.com',
+      password: 'strong-password',
+      dni: '87654321',
+      name: 'Nueva',
+      lastName: 'Entrenadora',
+      phone: '555-0200',
+    }),
+  }, coachRepository)
+
+  assert.equal(response.status, 201)
+  const body = await response.json()
+  assert.equal(body.email, 'new@example.com')
+  assert.equal(body.password, undefined)
+  assert.equal(await bcrypt.compare('strong-password', receivedHash), true)
 })

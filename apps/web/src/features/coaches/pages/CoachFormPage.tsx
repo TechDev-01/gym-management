@@ -14,6 +14,11 @@ import type { CoachInput } from '../types'
 
 const coachSchema = z.object({
   email: z.string().trim().email('Ingresa un correo válido.'),
+  password: z
+    .string()
+    .max(1024)
+    .optional()
+    .refine((value) => !value || value.length >= 8, 'La contraseña debe tener al menos 8 caracteres.'),
   dni: z.string().trim().min(1, 'El DNI es obligatorio.'),
   name: z.string().trim().min(1, 'El nombre es obligatorio.'),
   lastName: z.string().trim().min(1, 'El apellido es obligatorio.'),
@@ -22,6 +27,7 @@ const coachSchema = z.object({
 
 const defaultValues: CoachInput = {
   email: '',
+  password: '',
   dni: '',
   name: '',
   lastName: '',
@@ -98,9 +104,13 @@ export function CoachFormPage({ editing = false }: { editing?: boolean }) {
     setSubmitError(null)
 
     try {
+      const { password, ...coachData } = values
       const coach = editing
-        ? await updateMutation.mutateAsync(values)
-        : await createMutation.mutateAsync(values)
+        ? await updateMutation.mutateAsync(coachData)
+        : await createMutation.mutateAsync({
+            ...coachData,
+            ...(password ? { password } : {}),
+          })
 
       navigate(`/coaches/${coach.id}`, {
         replace: true,
@@ -214,6 +224,19 @@ export function CoachFormPage({ editing = false }: { editing?: boolean }) {
               helperText={errors.email?.message}
             />
           </Grid>
+          {!editing && (
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                label="Contraseña (opcional)"
+                type="password"
+                fullWidth
+                autoComplete="new-password"
+                {...register('password')}
+                error={Boolean(errors.password)}
+                helperText={errors.password?.message ?? 'Permite que el entrenador inicie sesión.'}
+              />
+            </Grid>
+          )}
         </Grid>
         <Stack sx={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 1 }}>
           <Button type="button" onClick={() => navigate('/coaches')}>

@@ -417,7 +417,6 @@ describe('memberships module', () => {
     expect(call).toBeDefined()
     expect(JSON.parse(String((call?.[1] as RequestInit).body))).toEqual({
       clientId: 1,
-      membershipId: 1,
       method: 'CASH',
     })
   })
@@ -458,7 +457,6 @@ describe('memberships module', () => {
     expect(call).toBeDefined()
     expect(JSON.parse(String((call?.[1] as RequestInit).body))).toMatchObject({
       clientId: 1,
-      membershipId: 1,
     })
   })
 

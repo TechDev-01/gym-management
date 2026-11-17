@@ -29,6 +29,7 @@ function createRepository(): ClientsRepository {
   return {
     getModuleName: () => 'clients',
     findByEmail: async () => null,
+    findAppUserByEmail: async () => null,
     findByDni: async () => null,
     create: async (clientInput) => ({
       id: 1,
@@ -87,10 +88,10 @@ test('POST /clients returns 201 for valid input', async () => {
   })
 })
 
-test('POST /clients returns 400 for invalid input', async () => {
+test('POST /clients returns 422 for invalid input', async () => {
   const result = await request(createRepository(), { ...input, email: 'invalid' })
 
-  assert.equal(result.status, 400)
+  assert.equal(result.status, 422)
 })
 
 test('POST /clients returns 409 for a duplicate email', async () => {

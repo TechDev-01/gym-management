@@ -1,6 +1,7 @@
 import { ConflictError } from '../../shared/errors/conflict.error.js'
 import { ForbiddenError } from '../../shared/errors/forbidden.error.js'
 import { NotFoundError } from '../../shared/errors/not-found.error.js'
+import { UnprocessableEntityError } from '../../shared/errors/unprocessable-entity.error.js'
 import type { Page } from '../../shared/pagination.js'
 import { toPage } from '../../shared/pagination.js'
 import type { ClientRoutine } from './client-routine.entity.js'
@@ -80,13 +81,14 @@ export class RoutinesService {
     const { id } = routineIdSchema.parse({ id: inputId })
     const routine = await this.repository.findRoutine(id)
     if (!routine || (!routine.isActive && user.role !== 'ADMIN')) throw new NotFoundError('Routine not found')
+    if (user.role === 'COACH') this.assertRoutineOwnership(routine, user)
     return routine
   }
 
   async createRoutine(input: unknown, user: UserContext): Promise<Routine> {
     const data = createRoutineSchema.parse(input)
     const coachId = user.role === 'COACH' ? user.coachId : data.createdById
-    if (!coachId) throw new ConflictError('A coach is required to create a routine')
+    if (!coachId) throw new UnprocessableEntityError('A coach is required to create a routine')
     if (!await this.repository.findCoach(coachId)) throw new NotFoundError('Coach not found')
     await this.ensureExercisesExist(data.exercises)
     return this.repository.createRoutine(data, coachId)
@@ -97,7 +99,7 @@ export class RoutinesService {
     const data = updateRoutineSchema.parse(input)
     const routine = await this.requireRoutine(id)
     this.assertRoutineOwnership(routine, user)
-    if (!routine.isActive) throw new ConflictError('Inactive routines cannot be modified')
+    if (!routine.isActive) throw new UnprocessableEntityError('Inactive routines cannot be modified')
     return this.repository.updateRoutine(id, data)
   }
 
@@ -113,7 +115,7 @@ export class RoutinesService {
     const data = createRoutineExerciseSchema.parse(input)
     const routine = await this.requireRoutine(id)
     this.assertRoutineOwnership(routine, user)
-    if (!routine.isActive) throw new ConflictError('Inactive routines cannot be modified')
+    if (!routine.isActive) throw new UnprocessableEntityError('Inactive routines cannot be modified')
     await this.ensureExerciseExists(data.exerciseId)
     return this.repository.addRoutineExercise(id, data)
   }
@@ -124,7 +126,7 @@ export class RoutinesService {
     const item = await this.requireRoutineExercise(routineExerciseId)
     const routine = await this.requireRoutine(item.routineId)
     this.assertRoutineOwnership(routine, user)
-    if (!routine.isActive) throw new ConflictError('Inactive routines cannot be modified')
+    if (!routine.isActive) throw new UnprocessableEntityError('Inactive routines cannot be modified')
     if (data.exerciseId) await this.ensureExerciseExists(data.exerciseId)
     return this.repository.updateRoutineExercise(routineExerciseId, data)
   }
@@ -134,7 +136,7 @@ export class RoutinesService {
     const item = await this.requireRoutineExercise(routineExerciseId)
     const routine = await this.requireRoutine(item.routineId)
     this.assertRoutineOwnership(routine, user)
-    if (!routine.isActive) throw new ConflictError('Inactive routines cannot be modified')
+    if (!routine.isActive) throw new UnprocessableEntityError('Inactive routines cannot be modified')
     await this.repository.deleteRoutineExercise(routineExerciseId)
   }
 
@@ -154,13 +156,16 @@ export class RoutinesService {
     const assignment = await this.repository.findAssignment(id)
     if (!assignment) throw new NotFoundError('Routine assignment not found')
     this.assertClientAccess(assignment.clientId, user)
+    if (user.role === 'COACH' && assignment.assignedById !== user.coachId) {
+      throw new ForbiddenError()
+    }
     return assignment
   }
 
   async createAssignment(input: unknown, user: UserContext): Promise<ClientRoutine> {
     const data = createAssignmentSchema.parse(input)
     const clientId = user.role === 'CLIENT' ? user.clientId : data.clientId
-    if (!clientId) throw new ConflictError('clientId is required')
+    if (!clientId) throw new UnprocessableEntityError('clientId is required')
     if (user.role === 'CLIENT' && data.clientId && data.clientId !== user.clientId) throw new ForbiddenError()
     const [client, routine] = await Promise.all([
       this.repository.findClient(clientId),
@@ -170,7 +175,7 @@ export class RoutinesService {
     if (!routine || !routine.isActive) throw new NotFoundError('Active routine not found')
     if (await this.repository.findActiveAssignment(clientId)) throw new ConflictError('Client already has an active routine')
     const assignedById = user.role === 'COACH' ? this.requireCoachId(user) : data.assignedById
-    if (!assignedById) throw new ConflictError('assignedById is required for an admin assignment')
+    if (!assignedById) throw new UnprocessableEntityError('assignedById is required for an admin assignment')
     if (!await this.repository.findCoach(assignedById)) throw new NotFoundError('Coach not found')
     const assignment = await this.repository.createAssignment({ ...data, clientId, assignedById })
     await this.notificationService.enqueue(
@@ -191,7 +196,7 @@ export class RoutinesService {
     const { id } = routineIdSchema.parse({ id: inputId })
     const { status } = assignmentStatusSchema.parse(input)
     const assignment = await this.getAssignment(id, user)
-    if (assignment.status !== AssignmentStatus.ACTIVE) throw new ConflictError('Only active assignments can change status')
+    if (assignment.status !== AssignmentStatus.ACTIVE) throw new UnprocessableEntityError('Only active assignments can change status')
     return this.repository.updateAssignmentStatus(id, status, assignment.endDate ?? new Date().toISOString().slice(0, 10))
   }
 

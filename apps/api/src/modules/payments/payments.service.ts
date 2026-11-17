@@ -1,6 +1,7 @@
 import Stripe from 'stripe'
 import type { EntityManager } from 'typeorm'
 import { ConflictError } from '../../shared/errors/conflict.error.js'
+import { UnprocessableEntityError } from '../../shared/errors/unprocessable-entity.error.js'
 import { NotFoundError } from '../../shared/errors/not-found.error.js'
 import { PaymentGatewayError } from '../../shared/errors/payment-gateway.error.js'
 import type { Page } from '../../shared/pagination.js'
@@ -81,7 +82,7 @@ export class PaymentsService implements PaymentGateway {
 
   async confirmManualPayment(subscriptionId: number, recordedById: number): Promise<void> {
     const payment = await this.repository.findPendingBySubscription(subscriptionId)
-    if (!payment) throw new ConflictError('Pending payment not found')
+    if (!payment) throw new UnprocessableEntityError('Pending payment not found')
     await this.repository.updatePayment(payment.id, {
       status: PaymentStatus.SUCCEEDED,
       recordedById,
@@ -204,7 +205,7 @@ function todayInTimezone(timezone: string): string {
       timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit',
     }).format(new Date())
   } catch {
-    throw new ConflictError('GYM_TIMEZONE is invalid')
+    throw new Error('GYM_TIMEZONE is invalid')
   }
 }
 

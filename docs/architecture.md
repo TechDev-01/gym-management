@@ -25,10 +25,19 @@ archivos JavaScript de `dist/database/migrations`.
 
 ## Seguridad
 
-`POST /api/v1/auth/login` valida credenciales con bcrypt y emite JWT con identidad,
-rol y relación con cliente o entrenador. `authenticate` valida el token y
-`requireRole` limita operaciones administrativas. Las entradas HTTP se validan con
-Zod antes de llegar al servicio.
+`POST /api/v1/auth/login` valida credenciales con bcrypt y emite un JWT de acceso
+con identidad, rol y relación con cliente o entrenador. `authenticate` valida el
+token y `requireRole` limita operaciones administrativas. Las entradas HTTP se
+validan con Zod antes de llegar al servicio: los errores de validación responden
+`422 UNPROCESSABLE_ENTITY`; un JSON malformado sigue respondiendo
+`400 INVALID_JSON`.
+
+El JWT de acceso se guarda en `sessionStorage` y dura una hora. La sesión se
+renueva con un refresh token opaco que se almacena hasheado (SHA-256) en la tabla
+`refresh_token`, se rota en cada uso y solo viaja en la cookie httpOnly
+`gym_refresh_token` (`SameSite=Strict`, path `/api/v1/auth`). Reutilizar un token
+ya revocado invalida todas las sesiones del usuario. La vigencia se configura con
+`REFRESH_TOKEN_TTL_DAYS` (7 días por defecto).
 
 ## Pagos
 

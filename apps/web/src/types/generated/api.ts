@@ -69,6 +69,7 @@ export interface paths {
                 };
                 400: components["responses"]["BadRequest"];
                 401: components["responses"]["Unauthorized"];
+                422: components["responses"]["UnprocessableEntity"];
                 429: components["responses"]["TooManyRequests"];
             };
         };
@@ -116,6 +117,78 @@ export interface paths {
                 400: components["responses"]["BadRequest"];
                 401: components["responses"]["Unauthorized"];
                 403: components["responses"]["Forbidden"];
+                422: components["responses"]["UnprocessableEntity"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Rotate the refresh token and issue a new access token */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Successful response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AuthResponse"];
+                    };
+                };
+                401: components["responses"]["Unauthorized"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Revoke the current refresh token */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Session closed */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
             };
         };
         delete?: never;
@@ -227,6 +300,7 @@ export interface paths {
                 401: components["responses"]["Unauthorized"];
                 403: components["responses"]["Forbidden"];
                 409: components["responses"]["Conflict"];
+                422: components["responses"]["UnprocessableEntity"];
             };
         };
         delete?: never;
@@ -310,6 +384,7 @@ export interface paths {
                 401: components["responses"]["Unauthorized"];
                 403: components["responses"]["Forbidden"];
                 404: components["responses"]["NotFound"];
+                422: components["responses"]["UnprocessableEntity"];
             };
         };
         trace?: never;
@@ -417,6 +492,7 @@ export interface paths {
                 401: components["responses"]["Unauthorized"];
                 403: components["responses"]["Forbidden"];
                 409: components["responses"]["Conflict"];
+                422: components["responses"]["UnprocessableEntity"];
             };
         };
         delete?: never;
@@ -501,6 +577,7 @@ export interface paths {
                 403: components["responses"]["Forbidden"];
                 404: components["responses"]["NotFound"];
                 409: components["responses"]["Conflict"];
+                422: components["responses"]["UnprocessableEntity"];
             };
         };
         trace?: never;
@@ -577,6 +654,7 @@ export interface paths {
                 403: components["responses"]["Forbidden"];
                 404: components["responses"]["NotFound"];
                 409: components["responses"]["Conflict"];
+                422: components["responses"]["UnprocessableEntity"];
             };
         };
         delete?: never;
@@ -662,6 +740,7 @@ export interface paths {
                 403: components["responses"]["Forbidden"];
                 404: components["responses"]["NotFound"];
                 409: components["responses"]["Conflict"];
+                422: components["responses"]["UnprocessableEntity"];
             };
         };
         trace?: never;
@@ -730,6 +809,7 @@ export interface paths {
                 };
                 400: components["responses"]["BadRequest"];
                 409: components["responses"]["Conflict"];
+                422: components["responses"]["UnprocessableEntity"];
             };
         };
         delete?: never;
@@ -810,6 +890,7 @@ export interface paths {
                 400: components["responses"]["BadRequest"];
                 404: components["responses"]["NotFound"];
                 409: components["responses"]["Conflict"];
+                422: components["responses"]["UnprocessableEntity"];
             };
         };
         trace?: never;
@@ -859,6 +940,7 @@ export interface paths {
                 };
                 400: components["responses"]["BadRequest"];
                 404: components["responses"]["NotFound"];
+                422: components["responses"]["UnprocessableEntity"];
             };
         };
         trace?: never;
@@ -905,6 +987,7 @@ export interface paths {
                 400: components["responses"]["BadRequest"];
                 404: components["responses"]["NotFound"];
                 409: components["responses"]["Conflict"];
+                422: components["responses"]["UnprocessableEntity"];
             };
         };
         delete?: never;
@@ -1082,7 +1165,7 @@ export interface paths {
                     };
                 };
                 404: components["responses"]["NotFound"];
-                409: components["responses"]["Conflict"];
+                422: components["responses"]["UnprocessableEntity"];
             };
         };
         delete?: never;
@@ -2335,6 +2418,7 @@ export interface components {
         CreateCoachRequest: {
             /** Format: email */
             email: string;
+            password?: string;
             dni: string;
             name: string;
             lastName: string;
@@ -2390,7 +2474,6 @@ export interface components {
         PaymentMethod: "CARD" | "CASH" | "TRANSFER";
         CreateSubscriptionRequest: {
             clientId: number;
-            membershipId: number;
             method: components["schemas"]["PaymentMethod"];
         };
         SubscriptionResponse: {
@@ -2675,8 +2758,17 @@ export interface components {
         };
     };
     responses: {
-        /** @description Invalid request */
+        /** @description Malformed request syntax */
         BadRequest: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description Request is well formed but semantically invalid */
+        UnprocessableEntity: {
             headers: {
                 [name: string]: unknown;
             };

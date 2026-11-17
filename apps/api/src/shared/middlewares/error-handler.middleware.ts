@@ -64,7 +64,7 @@ export const errorHandlerMiddleware: ErrorRequestHandler = (
   }
 
   if (error instanceof ZodError) {
-    response.status(400).json({
+    response.status(422).json({
       error: 'Invalid request',
       code: 'VALIDATION_ERROR',
       ...base,

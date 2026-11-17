@@ -60,6 +60,7 @@ function coachesRepository(exists = true): CoachesRepository {
     getCoach: async () => (exists ? makeCoach() : null),
     updateCoaches: async () => makeCoach(),
     findByEmail: async () => null,
+    findAppUserByEmail: async () => null,
     findByDni: async () => null,
   }
 }

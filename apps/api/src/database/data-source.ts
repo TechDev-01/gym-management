@@ -3,6 +3,7 @@ import { DataSource, type DataSourceOptions } from 'typeorm'
 import { env } from '../config/env.js'
 import { Attendance } from '../modules/attendance/attendance.entity.js'
 import { AppUser } from '../modules/auth/app-user.entity.js'
+import { RefreshToken } from '../modules/auth/refresh-token.entity.js'
 import { Client } from '../modules/clients/client.entity.js'
 import { Coach } from '../modules/coaches/coach.entity.js'
 import { CoachSchedule } from '../modules/coaches/coach-schedule.entity.js'
@@ -18,6 +19,7 @@ import { RoutineExercise } from '../modules/routines/routine-exercise.entity.js'
 
 export const moduleEntities = [
   AppUser,
+  RefreshToken,
   Client,
   Coach,
   CoachSchedule,

@@ -26,6 +26,7 @@ function repository(initialClient = client()): ClientsRepository {
     getModuleName: () => 'clients',
     findByEmail: async (email) =>
       currentClient?.email === email ? currentClient : null,
+    findAppUserByEmail: async () => null,
     findByDni: async (dni) => (currentClient?.dni === dni ? currentClient : null),
     create: async () => currentClient as Client,
     getClients: async (query) => ({

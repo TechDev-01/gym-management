@@ -1,4 +1,5 @@
 import express from 'express'
+import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import swaggerUi from 'swagger-ui-express'
 import { env } from './config/env.js'
@@ -17,7 +18,8 @@ if (env.TRUST_PROXY_HOPS > 0) {
 }
 
 app.use(requestIdMiddleware)
-app.use(cors({ origin: env.CORS_ORIGIN }))
+app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }))
+app.use(cookieParser())
 app.use(globalRateLimiter)
 app.use('/api/v1/payments', paymentsRouter)
 app.get('/api/docs.json', (_request, response) => {

@@ -14,6 +14,7 @@ const envSchema = z.object({
   CORS_ORIGIN: z.string().url().default('http://localhost:5173'),
   DATABASE_URL: z.string().url(),
   JWT_SECRET: z.string().min(32),
+  REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(7),
   REDIS_URL: z.string().url(),
   STRIPE_SECRET_KEY: z.string().min(1),
   STRIPE_WEBHOOK_SECRET: z.string().min(1),

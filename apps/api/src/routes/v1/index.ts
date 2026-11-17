@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { env } from '../../config/env.js'
 import { AppDataSource } from '../../database/data-source.js'
 import { AppUser } from '../../modules/auth/app-user.entity.js'
+import { RefreshToken } from '../../modules/auth/refresh-token.entity.js'
 import { TypeOrmAuthRepository } from '../../modules/auth/auth.repository.js'
 import { AuthService } from '../../modules/auth/auth.service.js'
 import { createAuthRouter } from '../../modules/auth/auth.routes.js'
@@ -17,8 +18,14 @@ export const v1Router = Router()
 
 const authRepository = new TypeOrmAuthRepository(
   AppDataSource.getRepository(AppUser),
+  AppDataSource.getRepository(RefreshToken),
 )
-const authService = new AuthService(authRepository, env.JWT_SECRET)
+const authService = new AuthService(
+  authRepository,
+  env.JWT_SECRET,
+  '1h',
+  env.REFRESH_TOKEN_TTL_DAYS,
+)
 
 v1Router.get('/health', (_request, response) => {
   response.status(200).json({ status: 'ok' })

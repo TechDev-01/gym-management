@@ -5,6 +5,7 @@ export interface CoachesHealthResponse {
 
 export interface CreateCoachInput {
   email: string
+  password?: string
   dni: string
   name: string
   lastName: string
