@@ -20,7 +20,10 @@ genera `JWT_SECRET` automáticamente.
 4. Completar `VITE_API_URL` con la URL pública de la API y el sufijo
    `/api/v1`.
 5. Configurar las claves productivas de Stripe y el webhook secreto.
-6. Confirmar que API, worker, PostgreSQL y Redis están en la misma región.
+6. Configurar `STRIPE_SUCCESS_URL` y `STRIPE_CANCEL_URL` con las rutas públicas
+   del frontend (`https://<web>/payment-success` y `https://<web>/payment-cancelled`),
+   no con la URL de la API.
+7. Confirmar que API, worker, PostgreSQL y Redis están en la misma región.
 
 El frontend recibe `VITE_API_URL` durante el build. Las variables con prefijo
 `VITE_` son públicas y nunca deben contener secretos.

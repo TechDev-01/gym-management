@@ -30,7 +30,7 @@ import {
   SubscriptionFormPage,
   SubscriptionsPage,
 } from '../features/memberships'
-import { PaymentsPage } from '../features/payments'
+import { PaymentCancelledPage, PaymentsPage, PaymentSuccessPage } from '../features/payments'
 import { ProgressPage } from '../features/progress'
 import { StatsPage } from '../features/stats'
 import {
@@ -59,6 +59,8 @@ export function AppRouter() {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/payment-success" element={<PaymentSuccessPage />} />
+      <Route path="/payment-cancelled" element={<PaymentCancelledPage />} />
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route element={<RoleGuard roles={statsViewRoles} />}>
